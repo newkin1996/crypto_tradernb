@@ -240,20 +240,21 @@ def index():
 
 @app.route('/webhook', methods=["POST"])
 def process_alert():
-    alert_response = request.get_json()
-    test_response = request.data
-    my_response = json.loads(request.data)
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {my_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    client = Client(api_key, api_secret)
-
-    alert_response = request.get_json()
-    test_response = request.data
-    my_response = json.loads(request.data)
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {my_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(request)
+    # alert_response = request.get_json()
+    # test_response = request.data
+    # my_response = json.loads(request.data)
+    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {my_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # client = Client(api_key, api_secret)
+    #
+    # alert_response = request.get_json()
+    # test_response = request.data
+    # my_response = json.loads(request.data)
+    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {my_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
     #### Settings for Spot order##########
 
