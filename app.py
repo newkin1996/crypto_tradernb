@@ -240,7 +240,7 @@ def index():
 
 @app.route('/webhook', methods=["POST"])
 def process_alert():
-    print(request)
+    return print(request)
     # alert_response = request.get_json()
     # test_response = request.data
     # my_response = json.loads(request.data)
