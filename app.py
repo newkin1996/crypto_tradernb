@@ -6,6 +6,7 @@ from decimal import Decimal
 import json
 import math
 from decimal import Decimal
+import ast
 
 app = Flask(__name__)
 
@@ -249,6 +250,15 @@ def process_alert():
     except:
         datas = json.loads(json.dumps())
         print(f"second method worked = {datas}")
+
+    try:
+        json_data = ast.literal_eval(json.dumps(datas))
+        print(f"third method worked = {json_data}")
+    except:
+        json_data = ast.literal_eval(datas)
+        print(f"fourth method worked = {json_data}")
+
+
     return "Hello"
     # alert_response = request.get_json()
     # test_response = request.data
