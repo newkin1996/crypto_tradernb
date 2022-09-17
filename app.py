@@ -227,10 +227,12 @@ def index():
         href_modified = f"https://www.tradingview.com/symbols/{coin_pair_name}/?exchange=BITSTAMP"
 
     try:
-        alert_response = json.loads(request.data)
+        alert_response = request.get_json()
         test_response = request.data
+        my_response = json.loads(request.data)
         print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {my_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         #### Settings for Spot order##########
 
