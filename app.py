@@ -140,44 +140,47 @@ def index():
             total_deposited_amt += deposited_amount * float(current_price_USDT)
     deposits_display = f"Overall Deposited Amt (USD): {round((total_deposited_amt), 2)}"
 
-    margin_info = client.get_margin_account()["userAssets"]
-    margin_balance = float(0)
-    for margin_asset in margin_info:
-        value = float(margin_asset["free"]) + float(margin_asset["locked"])
-        margin_balance += value
-    print(f"Margin balance = {margin_balance}")
+    try:
+        margin_info = client.get_margin_account()["userAssets"]
+        margin_balance = float(0)
+        for margin_asset in margin_info:
+            value = float(margin_asset["free"]) + float(margin_asset["locked"])
+            margin_balance += value
+        print(f"Margin balance = {margin_balance}")
 
-    futures_info = client.futures_account_balance()
-    futures_usd = 0.0
-    for futures_asset in futures_info:
-        name = futures_asset["asset"]
-        balance = float(futures_asset["balance"])
-        if name == "USDT":
-            futures_usd += balance
+        futures_info = client.futures_account_balance()
+        futures_usd = 0.0
+        for futures_asset in futures_info:
+            name = futures_asset["asset"]
+            balance = float(futures_asset["balance"])
+            if name == "USDT":
+                futures_usd += balance
 
-        else:
-            current_price_USDT = client.get_symbol_ticker(symbol=name + "USDT")["price"]
-            futures_usd += balance * float(current_price_USDT)
-    print(f"Futures balance = {futures_usd}")
+            else:
+                current_price_USDT = client.get_symbol_ticker(symbol=name + "USDT")["price"]
+                futures_usd += balance * float(current_price_USDT)
+        print(f"Futures balance = {futures_usd}")
 
-    sum_SPOT = 0.0
-    balances = client.get_account()
-    for _balance in balances["balances"]:
-        asset = _balance["asset"]
-        if float(_balance["free"]) != 0.0 or float(_balance["locked"]) != 0.0:
-            if asset == "USDT":
-                usdt_quantity = float(_balance["free"]) + float(_balance["locked"])
-                sum_SPOT += usdt_quantity
-            try:
-                btc_quantity = float(_balance["free"]) + float(_balance["locked"])
-                _price = client.get_symbol_ticker(symbol=asset + "USDT")
-                sum_SPOT += btc_quantity * float(_price["price"])
-            except:
-                pass
-    print(f"Spot balance = {sum_SPOT}")
-    total_asset_balance = sum_SPOT + futures_usd + margin_balance
-    asset_balance_display = f"Overall Asset Balance (USD): {round((total_asset_balance), 2)}"
-    spot_balance_display = f"Spot Asset Balance (USD): {round((sum_SPOT), 2)}"
+        sum_SPOT = 0.0
+        balances = client.get_account()
+        for _balance in balances["balances"]:
+            asset = _balance["asset"]
+            if float(_balance["free"]) != 0.0 or float(_balance["locked"]) != 0.0:
+                if asset == "USDT":
+                    usdt_quantity = float(_balance["free"]) + float(_balance["locked"])
+                    sum_SPOT += usdt_quantity
+                try:
+                    btc_quantity = float(_balance["free"]) + float(_balance["locked"])
+                    _price = client.get_symbol_ticker(symbol=asset + "USDT")
+                    sum_SPOT += btc_quantity * float(_price["price"])
+                except:
+                    pass
+        print(f"Spot balance = {sum_SPOT}")
+        total_asset_balance = sum_SPOT + futures_usd + margin_balance
+        asset_balance_display = f"Overall Asset Balance (USD): {round((total_asset_balance), 2)}"
+        spot_balance_display = f"Spot Asset Balance (USD): {round((sum_SPOT), 2)}"
+    except:
+        pass
 
     cursor.execute("select sum(pnl) as total from trade_log")
     results = cursor.fetchall()
