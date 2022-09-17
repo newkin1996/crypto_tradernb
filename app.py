@@ -251,12 +251,6 @@ def process_alert():
         json_data = ast.literal_eval(json.dumps(datas))
         print(f"third method worked = {json_data}")
 
-    try:
-        datas = json.loads(json.dumps())
-        print(f"second method worked = {datas}")
-    except:
-        json_data = ast.literal_eval(datas)
-        print(f"fourth method worked = {json_data}")
 
 
     return "Hello"
