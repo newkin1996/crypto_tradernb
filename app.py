@@ -19,7 +19,7 @@ colors = [
 
 #establishing the connection
 conn = psycopg2.connect(
-   database="gpu", user='postgres', password='postgres', host='127.0.0.1', port= '5433')
+   database="gpu", user='postgres', password='postgres', host='127.0.0.1', port= '5432')
 #Creating a cursor object using the cursor() method
 cursor = conn.cursor()
 
@@ -39,7 +39,7 @@ def welcome():
 def index():
     # establishing the connection
     conn = psycopg2.connect(
-        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5433')
+        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5432')
     # Creating a cursor object using the cursor() method
     cursor = conn.cursor()
 
@@ -259,7 +259,7 @@ def process_alert():
 
     # establishing the connection
     conn = psycopg2.connect(
-        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5433'
+        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5432'
     )
     # Creating a cursor object using the cursor() method
     cursor = conn.cursor()
