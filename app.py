@@ -228,6 +228,9 @@ def index():
 
     try:
         alert_response = json.loads(request.data)
+        test_response = request.data
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         #### Settings for Spot order##########
 
