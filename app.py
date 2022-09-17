@@ -242,7 +242,8 @@ def index():
 def process_alert():
     print("Webhook triggered")
     print(request)
-
+    print(request.json)
+    return "Hello"
     # alert_response = request.get_json()
     # test_response = request.data
     # my_response = json.loads(request.data)
