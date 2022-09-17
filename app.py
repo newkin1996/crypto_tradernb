@@ -197,24 +197,27 @@ def index():
     labels.clear()
     values.clear()
 
-    acc_info = client.get_account()
-    prices = client.get_all_tickers()
-    for asset in acc_info["balances"]:
-        if float(asset["free"]) != 0.0 or float(asset["locked"]) != 0.0:
-            pair_name = asset["asset"]
-            total_bal = float(asset["free"]) + float(asset["locked"])
-            for price in prices:
-                sym_for_price = price["symbol"]
-                if pair_name + "USDT" == sym_for_price:
-                    usdt_price = float(price["price"])
-                    value_in_usdt = (total_bal * usdt_price)
-                    break
-            if pair_name == "USDT" and total_bal > 2:
-                labels.append(pair_name)
-                values.append(round(total_bal, 2))
-            if value_in_usdt > 2:
-                labels.append(pair_name)
-                values.append(round(value_in_usdt, 2))
+    try:
+        acc_info = client.get_account()
+        prices = client.get_all_tickers()
+        for asset in acc_info["balances"]:
+            if float(asset["free"]) != 0.0 or float(asset["locked"]) != 0.0:
+                pair_name = asset["asset"]
+                total_bal = float(asset["free"]) + float(asset["locked"])
+                for price in prices:
+                    sym_for_price = price["symbol"]
+                    if pair_name + "USDT" == sym_for_price:
+                        usdt_price = float(price["price"])
+                        value_in_usdt = (total_bal * usdt_price)
+                        break
+                if pair_name == "USDT" and total_bal > 2:
+                    labels.append(pair_name)
+                    values.append(round(total_bal, 2))
+                if value_in_usdt > 2:
+                    labels.append(pair_name)
+                    values.append(round(value_in_usdt, 2))
+    except:
+        pass
 
     try:
         coin_pair_name = request.form["coins"]
