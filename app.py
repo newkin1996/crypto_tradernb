@@ -243,8 +243,12 @@ def process_alert():
     print("Webhook triggered")
     print(request)
     datas = request.get_data(as_text=True)
-    # datas = json.loads(json.dumps(datas))
-    print(datas)
+    try:
+        datas = json.loads(json.dumps(datas))
+        print(f"first method worked = {datas}")
+    except:
+        datas = json.loads(json.dumps())
+        print(f"second method worked = {datas}")
     return "Hello"
     # alert_response = request.get_json()
     # test_response = request.data
