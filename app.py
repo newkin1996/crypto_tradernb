@@ -13,6 +13,9 @@ app = Flask(__name__)
 api_key = ""
 api_secret = ""
 
+dash_user_name = "tradernb"
+dash_password = "NoToFOMO123"
+
 colors = [
     "#F7464A", "#46BFBD", "#FDB45C", "#FEDCBA",
     "#ABCDEF", "#DDDDDD", "#ABCABC", "#4169E1",
@@ -20,7 +23,7 @@ colors = [
 
 #establishing the connection
 conn = psycopg2.connect(
-   database="gpu", user='postgres', password='postgres', host='127.0.0.1', port= '5432')
+   database="gpu", user='postgres', password='postgres', host='127.0.0.1', port= '5433')
 #Creating a cursor object using the cursor() method
 cursor = conn.cursor()
 
@@ -31,16 +34,232 @@ cursor.execute("select version()")
 data = cursor.fetchone()
 print("Connection established to: ",data)
 
+client = Client(api_key, api_secret)
+
+try:
+    cursor.execute("select api_key from binance_keys")
+    r_2 = cursor.fetchall()
+    binance_api_key = r_2[0][0]
+except:
+    binance_api_key = "Enter Api Key"
+    cursor.execute("insert into binance_keys(api_key) values (%s)",
+                   [binance_api_key])
+    conn.commit()
+    print("Records inserted")
+
+try:
+    cursor.execute("select api_secret from binance_keys")
+    r_2 = cursor.fetchall()
+    binance_api_secret = r_2[0][0]
+except:
+    binance_api_secret = "Enter Api Secret"
+    cursor.execute("insert into binance_keys(api_secret) values (%s)",
+                   [binance_api_secret])
+    conn.commit()
+    print("Records inserted")
+
+try:
+    cursor.execute("select api_key from bybit_keys")
+    r_2 = cursor.fetchall()
+    bybit_api_key = r_2[0][0]
+except:
+    bybit_api_key = "Enter Api Key"
+    cursor.execute("insert into bybit_keys(api_key) values (%s)",
+                   [bybit_api_key])
+    conn.commit()
+    print("Records inserted")
+
+try:
+    cursor.execute("select api_secret from bybit_keys")
+    r_2 = cursor.fetchall()
+    bybit_api_secret = r_2[0][0]
+except:
+    bybit_api_secret = "Enter Api Secret"
+    cursor.execute("insert into bybit_keys(api_secret) values (%s)",
+                   [bybit_api_secret])
+    conn.commit()
+    print("Records inserted")
+
+
 @app.route('/')
 def welcome():
     return render_template('welcome.html')
 
+@app.route('/profile',methods=["POST","GET"])
+def get_profile():
+    if request.method == "GET":
+        try:
+            cursor.execute("select api_key from binance_keys")
+            r_2 = cursor.fetchall()
+            binance_api_key = r_2[0][0]
+        except:
+            binance_api_key = "Enter Api Key"
 
-@app.route('/binance',methods=["POST"])
+        try:
+            cursor.execute("select api_secret from binance_keys")
+            r_2 = cursor.fetchall()
+            binance_api_secret = r_2[0][0]
+        except:
+            binance_api_secret = "Enter Api Secret"
+
+        try:
+            cursor.execute("select api_key from bybit_keys")
+            r_2 = cursor.fetchall()
+            bybit_api_key = r_2[0][0]
+        except:
+            bybit_api_key = "Enter Api Key"
+
+        try:
+            cursor.execute("select api_secret from bybit_keys")
+            r_2 = cursor.fetchall()
+            bybit_api_secret = r_2[0][0]
+        except:
+            bybit_api_secret = "Enter Api Secret"
+
+
+        return render_template('profile.html',bi_key=binance_api_key,bi_secret=binance_api_secret,by_key=bybit_api_key,by_secret=bybit_api_secret)
+    if request.method == "POST":
+        binance_api_key = request.form["binance_key"]
+        binance_api_secret = request.form["binance_secret"]
+        bybit_api_key = request.form["bybit_key"]
+        bybit_api_secret = request.form["bybit_secret"]
+
+        cursor.execute("update binance_keys set api_key = %s, api_secret = %s",[binance_api_key, binance_api_secret])
+        conn.commit()
+        print("Records inserted")
+        print("Done")
+
+        cursor.execute("update bybit_keys set api_key = %s, api_secret = %s", [bybit_api_key, bybit_api_secret])
+        conn.commit()
+        print("Records inserted")
+        print("Done")
+
+        return render_template('profile.html',bi_key=binance_api_key,bi_secret=binance_api_secret,by_key=bybit_api_key,by_secret=bybit_api_secret)
+
+@app.route('/copy_msg',methods=["POST"])
+def get_json():
+    try:
+        exchange = request.form["exchange"]
+        exchange1 = '{"exchange"'
+        exchange2 = exchange
+        trade_type = request.form["trade_type"]
+        trade_type1 = "trade_type"
+        trade_type2 = trade_type
+        base_coin = request.form["base_coin"]
+        base_coin1 = "base_coin"
+        base_coin2 = base_coin
+        coin_pair = request.form["coin_pair"]
+        coin_pair1 = "coin_pair"
+        coin_pair2 = coin_pair
+        entry_type = request.form["entry_type"]
+        entry_type1 = "entry_type"
+        entry_type2 = entry_type
+        exit_type = request.form["exit_type"]
+        exit_type1 = "exit_type"
+        exit_type2 = exit_type
+        margin_mode = request.form["margin_mode"]
+        margin_mode1 = "margin_mode"
+        margin_mode2 = margin_mode
+        amt_type = request.form["amt_type"]
+        amt_type1 = "qty_type"
+        amt_type2 = amt_type
+        enter_amt = request.form["enter_amt"]
+        enter_amt1 = "qty"
+        enter_amt2 = enter_amt
+        long_lev = request.form["long_lev"]
+        long_lev1 = "long_leverage"
+        long_lev2 = long_lev
+        short_lev = request.form["short_lev"]
+        short_lev1 = "short_leverage"
+        short_lev2 = short_lev
+        long_sl = request.form["long_sl"]
+        long_sl1 = "long_stop_loss_percent"
+        long_sl2 = long_sl
+        long_tp = request.form["long_tp"]
+        long_tp1 = "long_take_profit_percent"
+        long_tp2 = long_tp
+        short_sl = request.form["short_sl"]
+        short_sl1 = "short_stop_loss_percent"
+        short_sl2 = short_sl
+        short_tp = request.form["short_tp"]
+        short_tp1 = "short_take_profit_percent"
+        short_tp2 = short_tp
+        multi_tp = request.form["multi_tp"]
+        multi_tp1 = "enable_multi_tp"
+        multi_tp2 = multi_tp
+        tp1_pos_size = request.form["tp1_pos_size"]
+        tp1_pos_size1 = "tp_1_pos_size"
+        tp1_pos_size2 = tp1_pos_size
+        tp2_pos_size = request.form["tp2_pos_size"]
+        tp2_pos_size1 = "tp_2_pos_size"
+        tp2_pos_size2 = tp2_pos_size
+        tp3_pos_size = request.form["tp3_pos_size"]
+        tp3_pos_size1 = "tp_3_pos_size"
+        tp3_pos_size2 = tp3_pos_size
+        tp1_percent = request.form["tp1_percent"]
+        tp1_percent1 = "tp1_percent"
+        tp1_percent2 = tp1_percent
+        tp2_percent = request.form["tp2_percent"]
+        tp2_percent1 = "tp2_percent"
+        tp2_percent2 = tp2_percent
+        tp3_percent = request.form["tp3_percent"]
+        tp3_percent1 = "tp3_percent"
+        tp3_percent2 = tp3_percent
+        stop_bot = request.form["stop_bot"]
+        stop_bot1 = "stop_bot_below_balance"
+        stop_bot2 = stop_bot
+        time_out = request.form["time_out"]
+        time_out1 = "order_time_out"
+        time_out2 = time_out
+        alert_type = request.form["alert_type"]
+        if alert_type == "Enter Long":
+            al_type = '"Enter_long"}'
+        if alert_type == "Exit Long":
+            al_type = '"Exit_long"}'
+        if alert_type == "Enter Short":
+            al_type = '"Enter_short"}'
+        if alert_type == "Exit Short":
+            al_type = '"Exit_short"}'
+        alert_type1 = "position_type"
+        alert_type2 = al_type
+
+
+        return render_template('copy_msg.html',exchange1=exchange1,exchange2=exchange2,trade_type1=trade_type1,trade_type2=trade_type2,base_coin1=base_coin1,base_coin2=base_coin2,coin_pair1=coin_pair1,coin_pair2=coin_pair2,entry_type1=entry_type1,entry_type2=entry_type2,exit_type1=exit_type1,exit_type2=exit_type2,margin_mode1=margin_mode1,margin_mode2=margin_mode2,amt_type1=amt_type1,amt_type2=amt_type2,enter_amt1=enter_amt1,enter_amt2=enter_amt2,long_lev1=long_lev1,long_lev2=long_lev2,short_lev1=short_lev1,short_lev2=short_lev2,long_sl1=long_sl1,long_sl2=long_sl2,long_tp1=long_tp1,long_tp2=long_tp2,short_sl1=short_sl1,short_sl2=short_sl2,short_tp1=short_tp1,short_tp2=short_tp2,multi_tp1=multi_tp1,multi_tp2=multi_tp2,tp1_pos_size1=tp1_pos_size1,tp1_pos_size2=tp1_pos_size2,tp2_pos_size1=tp2_pos_size1,tp2_pos_size2=tp2_pos_size2,tp3_pos_size1=tp3_pos_size1,tp3_pos_size2=tp3_pos_size2,tp1_percent1=tp1_percent1,tp1_percent2=tp1_percent2,tp2_percent1=tp2_percent1,tp2_percent2=tp2_percent2,tp3_percent1=tp3_percent1,tp3_percent2=tp3_percent2,stop_bot1=stop_bot1,stop_bot2=stop_bot2,time_out1=time_out1,time_out2=time_out2,alert_type1=alert_type1,alert_type2=alert_type2)
+    except:
+        return render_template('missing_fields.html')
+
+@app.route('/json_generator',methods=["POST", "GET"])
+def gen_json():
+    if request.method == "POST":
+        entered_un = request.form["Username"]
+        entered_pw = request.form["Password"]
+        if entered_un == dash_user_name and entered_pw == dash_password:
+            exchange_info = client.get_exchange_info()
+            list_of_coin_pairs = []
+            for s in exchange_info['symbols']:
+                sym = s['symbol']
+                list_of_coin_pairs.append(sym)
+            dup_removed_list = list(dict.fromkeys(list_of_coin_pairs))
+
+            return render_template('json_gen.html', coin_list=dup_removed_list)
+        else:
+            return render_template('welcome_incorrect_credentials.html')
+
+    if request.method == "GET":
+        exchange_info = client.get_exchange_info()
+        list_of_coin_pairs = []
+        for s in exchange_info['symbols']:
+            sym = s['symbol']
+            list_of_coin_pairs.append(sym)
+        dup_removed_list = list(dict.fromkeys(list_of_coin_pairs))
+
+        return render_template('json_gen.html',coin_list=dup_removed_list)
+
+@app.route('/binance_spot',methods=["POST", "GET"])
 def index():
     # establishing the connection
     conn = psycopg2.connect(
-        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5432')
+        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5433')
     # Creating a cursor object using the cursor() method
     cursor = conn.cursor()
 
@@ -56,164 +275,452 @@ def index():
     global api_secret
 
     try:
-        api_key = request.form["Api_Key"]
-        api_secret = request.form["Api_Secret"]
-        with open("api.txt", mode="w") as a_file:
-            a_file.write(f"{api_key}    & {api_secret}\n")
-    except:
-        pass
-
-    client = Client(api_key, api_secret)
-
-    try:
-
-        open_orders = client.get_open_orders()
-
-        sql = ''' DELETE FROM open_orders '''
-        cursor.execute(sql)
-        conn.commit()
-
-
-        for order in open_orders:
-
-            create_time = order["time"]
-            SPOT_OR_CREATE_DATE = datetime.fromtimestamp((create_time / 1000)).strftime("%Y-%m-%d")
-            # SPOT_OR_CREATE_TIME = datetime.fromtimestamp((create_time / 1000)).strftime("%I:%M:%S")
-            SPOT_SYM = order["symbol"]
-            SPOT_OR_ID = order["orderId"]
-            p = order["price"]
-            num = Decimal(p)
-            SPOT_PRICE = num.normalize()
-            q = order["origQty"]
-            q_num = Decimal(q)
-            SPOT_QUANTITY = q_num.normalize()
-            SPOT_OR_ACTION = order["side"]
-            SPOT_OR_TYPE = order["type"]
-
-            cursor.execute(f"select entry_price from id_list where order_id = {SPOT_OR_ID}")
-            result = cursor.fetchall()
-            ENTRY_PRICE_OF_BUY_ORDER = float(result[0][0])
-
-            prices = client.get_all_tickers()
-            for ticker in prices:
-                if ticker["symbol"] == SPOT_SYM:
-                    SPOT_SYM_CURRENT_PRICE = float(ticker["price"])
-                    break
-            # p_o_l = ((SPOT_SYM_CURRENT_PRICE - ENTRY_PRICE_OF_BUY_ORDER)/ENTRY_PRICE_OF_BUY_ORDER)
-            # p_o_l_r = round(p_o_l,6)
-            #
-            # PROFIT_OR_LOSS_FROM_ENTRY = ("{:.3%}".format(p_o_l_r))
-
-            p_o_l = ((SPOT_SYM_CURRENT_PRICE - ENTRY_PRICE_OF_BUY_ORDER) / ENTRY_PRICE_OF_BUY_ORDER) * 100
-            PROFIT_OR_LOSS_FROM_ENTRY = round(p_o_l, 3)
-
-            print(PROFIT_OR_LOSS_FROM_ENTRY)
-
-            cursor.execute("insert into open_orders(created_date, symbol, order_id, price, quantity, order_action, order_type, entry_price, current_price, percentage_profit_or_loss_from_entry) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",[SPOT_OR_CREATE_DATE, SPOT_SYM, SPOT_OR_ID, SPOT_PRICE, SPOT_QUANTITY, SPOT_OR_ACTION,SPOT_OR_TYPE, ENTRY_PRICE_OF_BUY_ORDER, SPOT_SYM_CURRENT_PRICE, PROFIT_OR_LOSS_FROM_ENTRY])
-            conn.commit()
-    except:
-        pass
-
-    order_statement='SELECT * FROM open_orders;'
-    cursor.execute(order_statement)
-    rowResults=cursor.fetchall()
-    list_length = len(rowResults)
-
-
-    exchange_info = client.get_exchange_info()
-    list_of_coin_pairs = []
-    for s in exchange_info['symbols']:
-        baseAsset = s['baseAsset']
-        list_of_coin_pairs.append((baseAsset + "USD"))
-    dup_removed_list = list(dict.fromkeys(list_of_coin_pairs))
-
-    error_order_statement = 'SELECT * FROM error_log;'
-    cursor.execute(error_order_statement)
-    error_rowResults = cursor.fetchall()
-    error_list_length = len(error_rowResults)
-
-    trade_order_statement = 'SELECT * FROM trade_log;'
-    cursor.execute(trade_order_statement)
-    trade_rowResults = cursor.fetchall()
-    trade_list_length = len(trade_rowResults)
-
-    deposits = client.get_deposit_history()
-    total_deposited_amt = float(0)
-    for deposit in deposits:
-        deposited_coin_name = deposit["coin"]
-        deposited_amount = float(deposit["amount"])
-        if deposited_coin_name == "USDT":
-            total_deposited_amt += deposited_amount
+        cursor.execute("select api_key from binance_keys")
+        r_2 = cursor.fetchall()
+        if r_2[0][0] == "Enter Api Key":
+            api_key = ""
         else:
-            current_price_USDT = client.get_symbol_ticker(symbol=deposited_coin_name + "USDT")["price"]
-            total_deposited_amt += deposited_amount * float(current_price_USDT)
-    deposits_display = f"Overall Deposited Amt (USD): {round((total_deposited_amt), 2)}"
+            api_key = r_2[0][0]
+    except:
+        api_key = ""
 
     try:
-        margin_info = client.get_margin_account()["userAssets"]
-        margin_balance = float(0)
-        for margin_asset in margin_info:
-            value = float(margin_asset["free"]) + float(margin_asset["locked"])
-            margin_balance += value
-        print(f"Margin balance = {margin_balance}")
+        cursor.execute("select api_secret from binance_keys")
+        r_2 = cursor.fetchall()
+        if r_2[0][0] == "Enter Api Secret":
+            api_secret = ""
+        else:
+            api_secret = r_2[0][0]
+    except:
+        api_secret = ""
 
-        futures_info = client.futures_account_balance()
-        futures_usd = 0.0
-        for futures_asset in futures_info:
-            name = futures_asset["asset"]
-            balance = float(futures_asset["balance"])
-            if name == "USDT":
-                futures_usd += balance
+    if api_key and api_secret != "":
+        client = Client(api_key, api_secret)
 
-            else:
-                current_price_USDT = client.get_symbol_ticker(symbol=name + "USDT")["price"]
-                futures_usd += balance * float(current_price_USDT)
-        print(f"Futures balance = {futures_usd}")
+        try:
 
-        sum_SPOT = 0.0
-        balances = client.get_account()
-        for _balance in balances["balances"]:
-            asset = _balance["asset"]
-            if float(_balance["free"]) != 0.0 or float(_balance["locked"]) != 0.0:
-                if asset == "USDT":
-                    usdt_quantity = float(_balance["free"]) + float(_balance["locked"])
-                    sum_SPOT += usdt_quantity
+            open_orders = client.get_open_orders()
+
+            sql = ''' DELETE FROM open_orders '''
+            cursor.execute(sql)
+            conn.commit()
+
+
+            for order in open_orders:
+
+                create_time = order["time"]
+                SPOT_OR_CREATE_DATE = datetime.fromtimestamp((create_time / 1000)).strftime("%Y-%m-%d")
+                # SPOT_OR_CREATE_TIME = datetime.fromtimestamp((create_time / 1000)).strftime("%I:%M:%S")
+                SPOT_SYM = order["symbol"]
+                SPOT_OR_ID = order["orderId"]
+                p = order["price"]
+                num = Decimal(p)
+                SPOT_PRICE = num.normalize()
+                q = order["origQty"]
+                q_num = Decimal(q)
+                SPOT_QUANTITY = q_num.normalize()
+                SPOT_OR_ACTION = order["side"]
+                SPOT_OR_TYPE = order["type"]
+
+                prices = client.get_all_tickers()
+                for ticker in prices:
+                    if ticker["symbol"] == SPOT_SYM:
+                        SPOT_SYM_CURRENT_PRICE = float(ticker["price"])
+                        break
+
                 try:
-                    btc_quantity = float(_balance["free"]) + float(_balance["locked"])
-                    _price = client.get_symbol_ticker(symbol=asset + "USDT")
-                    sum_SPOT += btc_quantity * float(_price["price"])
+                    cursor.execute("select entry_price from s_id_list where order_id = %s", [SPOT_OR_ID])
+                    result = cursor.fetchall()
+                    ENTRY_PRICE_OF_BUY_ORDER = float(result[0][0])
+
+                    # p_o_l = ((SPOT_SYM_CURRENT_PRICE - ENTRY_PRICE_OF_BUY_ORDER)/ENTRY_PRICE_OF_BUY_ORDER)
+                    # p_o_l_r = round(p_o_l,6)
+                    #
+                    # PROFIT_OR_LOSS_FROM_ENTRY = ("{:.3%}".format(p_o_l_r))
+                    p_n_l = round((SPOT_SYM_CURRENT_PRICE - ENTRY_PRICE_OF_BUY_ORDER),3)
+                    p_o_l = ((SPOT_SYM_CURRENT_PRICE - ENTRY_PRICE_OF_BUY_ORDER) / ENTRY_PRICE_OF_BUY_ORDER) * 100
+                    PROFIT_OR_LOSS_FROM_ENTRY = str((round(p_o_l, 3))) + "%"
+
+                    print(PROFIT_OR_LOSS_FROM_ENTRY)
+
+                    cursor.execute(
+                        "insert into open_orders(created_date, symbol, order_id, price, quantity, order_action, order_type, entry_price, current_price, pnl,pnl_per) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)",
+                        [SPOT_OR_CREATE_DATE, SPOT_SYM, SPOT_OR_ID, SPOT_PRICE, SPOT_QUANTITY, SPOT_OR_ACTION,
+                         SPOT_OR_TYPE, ENTRY_PRICE_OF_BUY_ORDER, SPOT_SYM_CURRENT_PRICE, p_n_l,
+                         PROFIT_OR_LOSS_FROM_ENTRY])
+                    conn.commit()
                 except:
-                    pass
-        print(f"Spot balance = {sum_SPOT}")
-        total_asset_balance = sum_SPOT + futures_usd + margin_balance
-        asset_balance_display = f"Overall Asset Balance (USD): {round((total_asset_balance), 2)}"
-        spot_balance_display = f"Spot Asset Balance (USD): {round((sum_SPOT), 2)}"
-    except:
-        asset_balance_display = "Overall Asset Balance (USD): NA"
-        spot_balance_display = "Spot Asset Balance (USD): NA"
+                    cursor.execute(
+                        "insert into open_orders(created_date, symbol, order_id, price, quantity, order_action, order_type, current_price) values (%s, %s, %s, %s, %s, %s, %s, %s)",
+                        [SPOT_OR_CREATE_DATE, SPOT_SYM, SPOT_OR_ID, SPOT_PRICE, SPOT_QUANTITY, SPOT_OR_ACTION,
+                         SPOT_OR_TYPE, SPOT_SYM_CURRENT_PRICE])
+                    conn.commit()
 
-    cursor.execute("select sum(pnl) as total from trade_log")
-    results = cursor.fetchall()
+
+        except:
+            pass
+
+        order_statement='SELECT * FROM open_orders;'
+        cursor.execute(order_statement)
+        rowResults=cursor.fetchall()
+        list_length = len(rowResults)
+
+
+        exchange_info = client.get_exchange_info()
+        list_of_coin_pairs = []
+        for s in exchange_info['symbols']:
+            baseAsset = s['baseAsset']
+            list_of_coin_pairs.append((baseAsset + "USD"))
+        dup_removed_list = list(dict.fromkeys(list_of_coin_pairs))
+
+        error_order_statement = 'SELECT * FROM error_log;'
+        cursor.execute(error_order_statement)
+        error_rowResults = cursor.fetchall()
+        error_list_length = len(error_rowResults)
+
+        trade_order_statement = 'SELECT * FROM trade_log;'
+        cursor.execute(trade_order_statement)
+        trade_rowResults = cursor.fetchall()
+        trade_list_length = len(trade_rowResults)
+
+        deposits = client.get_deposit_history()
+        total_deposited_amt = float(0)
+        for deposit in deposits:
+            deposited_coin_name = deposit["coin"]
+            deposited_amount = float(deposit["amount"])
+            if deposited_coin_name == "USDT":
+                total_deposited_amt += deposited_amount
+            else:
+                current_price_USDT = client.get_symbol_ticker(symbol=deposited_coin_name + "USDT")["price"]
+                total_deposited_amt += deposited_amount * float(current_price_USDT)
+        deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
+
+        try:
+            margin_info = client.get_margin_account()["userAssets"]
+            margin_balance = float(0)
+            for margin_asset in margin_info:
+                value = float(margin_asset["free"]) + float(margin_asset["locked"])
+                margin_balance += value
+            print(f"Margin balance = {margin_balance}")
+
+            futures_info = client.futures_account_balance()
+            futures_usd = 0.0
+            for futures_asset in futures_info:
+                name = futures_asset["asset"]
+                balance = float(futures_asset["balance"])
+                if name == "USDT":
+                    futures_usd += balance
+
+                else:
+                    current_price_USDT = client.get_symbol_ticker(symbol=name + "USDT")["price"]
+                    futures_usd += balance * float(current_price_USDT)
+            print(f"Futures balance = {futures_usd}")
+
+            sum_SPOT = 0.0
+            balances = client.get_account()
+            for _balance in balances["balances"]:
+                asset = _balance["asset"]
+                if float(_balance["free"]) != 0.0 or float(_balance["locked"]) != 0.0:
+                    if asset == "USDT":
+                        usdt_quantity = float(_balance["free"]) + float(_balance["locked"])
+                        sum_SPOT += usdt_quantity
+                    try:
+                        btc_quantity = float(_balance["free"]) + float(_balance["locked"])
+                        _price = client.get_symbol_ticker(symbol=asset + "USDT")
+                        sum_SPOT += btc_quantity * float(_price["price"])
+                    except:
+                        pass
+            print(f"Spot balance = {sum_SPOT}")
+            total_asset_balance = sum_SPOT + futures_usd + margin_balance
+            asset_balance_display = f"Asset Balance (USD): {round((total_asset_balance), 2)}"
+            spot_balance_display = f"Asset Balance (USD): {round((sum_SPOT), 2)}"
+        except:
+            asset_balance_display = "Asset Balance (USD): NA"
+            spot_balance_display = "Asset Balance (USD): NA"
+
+        cursor.execute("select sum(pnl) as total from trade_log")
+        results = cursor.fetchall()
+        try:
+            overall_pnl = float(round((results[0][0]), 2))
+            pnl_display = f"Spot PnL (USD): {overall_pnl}"
+        except:
+            overall_pnl = "NA"
+            pnl_display = "Spot PnL (USD): NA"
+
+        labels = []
+        values = []
+
+        labels.clear()
+        values.clear()
+
+        try:
+            acc_info = client.get_account()
+            prices = client.get_all_tickers()
+            for asset in acc_info["balances"]:
+                if float(asset["free"]) != 0.0 or float(asset["locked"]) != 0.0:
+                    pair_name = asset["asset"]
+                    total_bal = float(asset["free"]) + float(asset["locked"])
+                    for price in prices:
+                        sym_for_price = price["symbol"]
+                        if pair_name + "USDT" == sym_for_price:
+                            usdt_price = float(price["price"])
+                            value_in_usdt = (total_bal * usdt_price)
+                            break
+                    if pair_name == "USDT" and total_bal > 2:
+                        labels.append(pair_name)
+                        values.append(round(total_bal, 2))
+                    if value_in_usdt > 2:
+                        labels.append(pair_name)
+                        values.append(round(value_in_usdt, 2))
+        except:
+            pass
+
+        try:
+            coin_pair_name = request.form["coins"]
+            href_modified = f"https://www.tradingview.com/symbols/{coin_pair_name}/?exchange=BITSTAMP"
+        except:
+            coin_pair_name = "BTCUSD"
+            href_modified = f"https://www.tradingview.com/symbols/{coin_pair_name}/?exchange=BITSTAMP"
+
+
+        return render_template('index.html',recentRecords=rowResults,list_length=list_length,coin_list=dup_removed_list,coin_pair_name=coin_pair_name,modified_link=href_modified,labels=labels,values=values,colors=colors,error_recentRecords=error_rowResults,error_list_length=error_list_length,trade_recentRecords=trade_rowResults,trade_list_length=trade_list_length,deposits=deposits_display,assets=asset_balance_display,pnl=pnl_display,spot=spot_balance_display)
+
+    else:
+        return render_template('error.html')
+
+@app.route('/binance_futures',methods=["POST", "GET"])
+def get_futures():
+    # establishing the connection
+    conn = psycopg2.connect(
+        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5433')
+    # Creating a cursor object using the cursor() method
+    cursor = conn.cursor()
+
+    # Executing an MYSQL function using the execute() method
+    cursor.execute("select version()")
+
+    # Fetch a single row using fetchone() method.
+    data = cursor.fetchone()
+    print("Connection established to: ", data)
+
+    print(request)
+    global api_key
+    global api_secret
+
     try:
-        overall_pnl = float(round((results[0][0]), 2))
-        pnl_display = f"Overall Spot PnL (USD): {overall_pnl}"
+        cursor.execute("select api_key from binance_keys")
+        r_2 = cursor.fetchall()
+        api_key = r_2[0][0]
     except:
-        overall_pnl = "NA"
-        pnl_display = "Overall Spot PnL (USD): NA"
-
-    labels = []
-    values = []
-
-    labels.clear()
-    values.clear()
+        api_key = ""
 
     try:
-        acc_info = client.get_account()
-        prices = client.get_all_tickers()
-        for asset in acc_info["balances"]:
-            if float(asset["free"]) != 0.0 or float(asset["locked"]) != 0.0:
+        cursor.execute("select api_secret from binance_keys")
+        r_2 = cursor.fetchall()
+        api_secret = r_2[0][0]
+    except:
+        api_secret = ""
+
+    if api_key and api_secret != "":
+        client = Client(api_key, api_secret)
+
+        try:
+
+            open_orders = client.futures_get_open_orders()
+
+            sql = ''' DELETE FROM f_o_orders '''
+            cursor.execute(sql)
+            conn.commit()
+
+
+            for order in open_orders:
+
+                create_time = order["time"]
+                create_date = datetime.fromtimestamp((create_time / 1000)).strftime("%Y-%m-%d")
+                # SPOT_OR_CREATE_TIME = datetime.fromtimestamp((create_time / 1000)).strftime("%I:%M:%S")
+                sym = order["symbol"]
+                id = order["orderId"]
+                p = order["stopPrice"]
+                num = Decimal(p)
+                price = num.normalize()
+
+                action= order["side"]
+                type = order["type"]
+
+                prices = client.get_all_tickers()
+                for ticker in prices:
+                    if ticker["symbol"] == sym:
+                        sym_current_price = float(ticker["price"])
+                        break
+
+                try:
+                    cursor.execute("select entry_price from f_id_list where order_id = %s", [id])
+                    result = cursor.fetchall()
+                    ENTRY_PRICE_OF_INITIAL_ORDER = float(result[0][0])
+
+                    cursor.execute("select qty from f_id_list where order_id = %s", [id])
+                    result = cursor.fetchall()
+                    QTY_OF_OPEN_ORDER = float(result[0][0])
+
+                    p_n_l = round((sym_current_price - ENTRY_PRICE_OF_INITIAL_ORDER),3)
+                    p_o_l = ((sym_current_price - ENTRY_PRICE_OF_INITIAL_ORDER) / ENTRY_PRICE_OF_INITIAL_ORDER) * 100
+                    PROFIT_OR_LOSS_FROM_ENTRY = str((round(p_o_l, 3))) + "%"
+
+                    print(PROFIT_OR_LOSS_FROM_ENTRY)
+
+                    cursor.execute("insert into f_o_orders(created_date, symbol, order_id, price, quantity, order_action, order_type, entry_price, current_price, pnl, pnl_per) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",[create_date, sym, id, price, QTY_OF_OPEN_ORDER, action,type, ENTRY_PRICE_OF_INITIAL_ORDER, sym_current_price, p_n_l, PROFIT_OR_LOSS_FROM_ENTRY])
+                    conn.commit()
+                except:
+                    cursor.execute(
+                        "insert into f_o_orders(created_date, symbol, order_id, price, order_action, order_type, current_price) values (%s, %s, %s, %s, %s, %s, %s)",
+                        [create_date, sym, id, price, action, type, sym_current_price])
+                    conn.commit()
+
+        except:
+            pass
+
+        try:
+
+            open_positions = client.futures_position_information()
+
+            sql = ''' DELETE FROM f_o_positions '''
+            cursor.execute(sql)
+            conn.commit()
+
+            for order in open_positions:
+                sym = order["symbol"]
+                create_time = order["updateTime"]
+                create_date = datetime.fromtimestamp((create_time / 1000)).strftime("%Y-%m-%d")
+                # SPOT_OR_CREATE_TIME = datetime.fromtimestamp((create_time / 1000)).strftime("%I:%M:%S")
+                pos_entry_price = float(order["entryPrice"])
+                liquidation_price = float(order["liquidationPrice"])
+                pos_current_price = float(order["markPrice"])
+
+                margin_type = order["marginType"]
+                leverage = int(order["leverage"])
+
+                if float(order["positionAmt"]) < 0:
+                    pos_qty = (float(order["positionAmt"]))*-1
+                    pos_side = "SELL"
+                else:
+                    pos_qty = float(order["positionAmt"])
+                    pos_side = "BUY"
+
+                PROFIT_OR_LOSS_FROM_ENTRY = round((float(order["unRealizedProfit"])),6)
+
+                amt = round(float(order["positionAmt"]))
+                if amt != 0:
+                    cursor.execute(
+                        "insert into f_o_positions(created_date, symbol, side, entry_price, current_price, liq_price, margin_type, leverage, quantity, pnl) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        [create_date, sym, pos_side, pos_entry_price, pos_current_price, liquidation_price, margin_type, leverage, pos_qty,PROFIT_OR_LOSS_FROM_ENTRY])
+                    conn.commit()
+        except:
+            pass
+
+        order_statement='SELECT * FROM f_o_orders;'
+        cursor.execute(order_statement)
+        rowResults=cursor.fetchall()
+        list_length = len(rowResults)
+
+        order_statement = 'SELECT * FROM f_o_positions;'
+        cursor.execute(order_statement)
+        pos_rowResults = cursor.fetchall()
+        pos_list_length = len(pos_rowResults)
+
+
+        exchange_info = client.get_exchange_info()
+        list_of_coin_pairs = []
+        for s in exchange_info['symbols']:
+            baseAsset = s['baseAsset']
+            list_of_coin_pairs.append((baseAsset + "USD"))
+        dup_removed_list = list(dict.fromkeys(list_of_coin_pairs))
+
+        error_order_statement = 'SELECT * FROM futures_e_log;'
+        cursor.execute(error_order_statement)
+        error_rowResults = cursor.fetchall()
+        error_list_length = len(error_rowResults)
+
+        trade_order_statement = 'SELECT * FROM futures_t_log;'
+        cursor.execute(trade_order_statement)
+        trade_rowResults = cursor.fetchall()
+        trade_list_length = len(trade_rowResults)
+
+        deposits = client.get_deposit_history()
+        total_deposited_amt = float(0)
+        for deposit in deposits:
+            deposited_coin_name = deposit["coin"]
+            deposited_amount = float(deposit["amount"])
+            if deposited_coin_name == "USDT":
+                total_deposited_amt += deposited_amount
+            else:
+                current_price_USDT = client.get_symbol_ticker(symbol=deposited_coin_name + "USDT")["price"]
+                total_deposited_amt += deposited_amount * float(current_price_USDT)
+        deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
+
+        try:
+            margin_info = client.get_margin_account()["userAssets"]
+            margin_balance = float(0)
+            for margin_asset in margin_info:
+                value = float(margin_asset["free"]) + float(margin_asset["locked"])
+                margin_balance += value
+            print(f"Margin balance = {margin_balance}")
+
+            futures_info = client.futures_account_balance()
+            futures_usd = 0.0
+            for futures_asset in futures_info:
+                name = futures_asset["asset"]
+                balance = float(futures_asset["balance"])
+                if name == "USDT":
+                    futures_usd += balance
+
+                else:
+                    current_price_USDT = client.get_symbol_ticker(symbol=name + "USDT")["price"]
+                    futures_usd += balance * float(current_price_USDT)
+            print(f"Futures balance = {futures_usd}")
+
+            sum_SPOT = 0.0
+            balances = client.get_account()
+            for _balance in balances["balances"]:
+                asset = _balance["asset"]
+                if float(_balance["free"]) != 0.0 or float(_balance["locked"]) != 0.0:
+                    if asset == "USDT":
+                        usdt_quantity = float(_balance["free"]) + float(_balance["locked"])
+                        sum_SPOT += usdt_quantity
+                    try:
+                        btc_quantity = float(_balance["free"]) + float(_balance["locked"])
+                        _price = client.get_symbol_ticker(symbol=asset + "USDT")
+                        sum_SPOT += btc_quantity * float(_price["price"])
+                    except:
+                        pass
+            print(f"Spot balance = {sum_SPOT}")
+            total_asset_balance = sum_SPOT + futures_usd + margin_balance
+            asset_balance_display = f"Asset Balance (USD): {round((total_asset_balance), 2)}"
+            futures_balance_display = f"Asset Balance (USD): {round((futures_usd), 2)}"
+        except:
+            asset_balance_display = "Asset Balance (USD): NA"
+            futures_balance_display = "Asset Balance (USD): NA"
+
+        cursor.execute("select sum(pnl) as total from futures_t_log")
+        results = cursor.fetchall()
+        try:
+            overall_pnl = float(round((results[0][0]), 2))
+            pnl_display = f"Overall Futures PnL (USD): {overall_pnl}"
+        except:
+            overall_pnl = "NA"
+            pnl_display = "Futures PnL (USD): NA"
+
+        labels = []
+        values = []
+
+        labels.clear()
+        values.clear()
+
+        try:
+            acc_info = client.futures_account_balance()
+            prices = client.get_all_tickers()
+            for asset in acc_info:
                 pair_name = asset["asset"]
-                total_bal = float(asset["free"]) + float(asset["locked"])
+                total_bal = float(asset["balance"])
                 for price in prices:
                     sym_for_price = price["symbol"]
                     if pair_name + "USDT" == sym_for_price:
@@ -226,560 +733,41 @@ def index():
                 if value_in_usdt > 2:
                     labels.append(pair_name)
                     values.append(round(value_in_usdt, 2))
-    except:
-        pass
+        except:
+            pass
 
-    try:
-        coin_pair_name = request.form["coins"]
-        href_modified = f"https://www.tradingview.com/symbols/{coin_pair_name}/?exchange=BITSTAMP"
-    except:
-        coin_pair_name = "BTCUSD"
-        href_modified = f"https://www.tradingview.com/symbols/{coin_pair_name}/?exchange=BITSTAMP"
+        try:
+            coin_pair_name = request.form["coins"]
+            href_modified = f"https://www.tradingview.com/symbols/{coin_pair_name}/?exchange=BITSTAMP"
+        except:
+            coin_pair_name = "BTCUSD"
+            href_modified = f"https://www.tradingview.com/symbols/{coin_pair_name}/?exchange=BITSTAMP"
 
 
-    return render_template('index.html',recentRecords=rowResults,list_length=list_length,coin_list=dup_removed_list,coin_pair_name=coin_pair_name,modified_link=href_modified,labels=labels,values=values,colors=colors,error_recentRecords=error_rowResults,error_list_length=error_list_length,trade_recentRecords=trade_rowResults,trade_list_length=trade_list_length,deposits=deposits_display,assets=asset_balance_display,pnl=pnl_display,spot=spot_balance_display)
+        return render_template('futures.html',pos_rowResults=pos_rowResults,pos_list_length=pos_list_length,recentRecords=rowResults,list_length=list_length,coin_list=dup_removed_list,coin_pair_name=coin_pair_name,modified_link=href_modified,labels=labels,values=values,colors=colors,error_recentRecords=error_rowResults,error_list_length=error_list_length,trade_recentRecords=trade_rowResults,trade_list_length=trade_list_length,deposits=deposits_display,assets=asset_balance_display,pnl=pnl_display,spot=futures_balance_display)
+
+    else:
+        return render_template('error.html')
+
 
 @app.route('/webhook', methods=["POST"])
 def process_alert():
     print("Webhook triggered")
     print(request)
     datas = request.get_data(as_text=True)
-    try:
-        datas = json.loads(json.dumps(datas))
-        print(f"first method worked = {datas}")
-    except:
-        json_data = ast.literal_eval(json.dumps(datas))
-        print(f"third method worked = {json_data}")
 
+    datas = json.loads(json.dumps(datas))
+    print(f"first method worked = {datas}")
 
 
     return "Hello"
-    # alert_response = request.get_json()
-    # test_response = request.data
-    # my_response = json.loads(request.data)
-    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {my_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    # client = Client(api_key, api_secret)
-    #
-    # alert_response = request.get_json()
-    # test_response = request.data
-    # my_response = json.loads(request.data)
-    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!alert response = {alert_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {test_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    # print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!test response = {my_response}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-    #### Settings for Spot order##########
-
-    # buy_leverage_alert = alert_response["buy_leverage"]
-    # sell_leverage_alert = alert_response["sell_leverage"]
-    # entry_order_type_number = alert_response["entry_order_type"]
-    # if entry_order_type_number == 1:
-    #     entry_order_type = "Limit"
-    # if entry_order_type_number == 0:
-    #     entry_order_type = "Market"
-    #
-    # # establishing the connection
-    # conn = psycopg2.connect(
-    #     database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5433'
-    # )
-    # # Creating a cursor object using the cursor() method
-    # cursor = conn.cursor()
-    #
-    # # Executing an MYSQL function using the execute() method
-    # cursor.execute("select version()")
-    #
-    # # Fetch a single row using fetchone() method.
-    # data = cursor.fetchone()
-    # print("Connection established to: ", data)
-    #
-    # SPOT_SYMBOL = ""
-    # SPOT_SIDE = ""
-    # SPOT_QUANTITY = ""
-    # if alert_response["entry_order_type"] == 1:
-    #     JSON_ENTRY = "Limit"
-    # if alert_response["entry_order_type"] == 0:
-    #     JSON_ENTRY = "Market"
-    # if alert_response["exit_order_type"] == 1:
-    #     JSON_EXIT = "Limit"
-    # if alert_response["exit_order_type"] == 0:
-    #     JSON_EXIT = "Market"
-    #
-    # def execute_market_buy_spot_order():
-    #     global SPOT_SYMBOL
-    #     global SPOT_SIDE
-    #     global SPOT_QUANTITY
-    #     if buy_leverage_alert == 1:
-    #         SPOT_SIDE = "BUY"
-    #
-    #         SPOT_SYMBOL = alert_response["coin_pair"]
-    #         SPOT_TYPE_ENTRY = "MARKET"
-    #         SPOT_QUANTITY = alert_response["qty"]
-    #
-    #         market_buy_order = client.create_order(symbol=SPOT_SYMBOL, side=SPOT_SIDE, type=SPOT_TYPE_ENTRY,
-    #                                                quantity=SPOT_QUANTITY)
-    #         print(f"market_buy_order = {market_buy_order}")
-    #
-    #         BUY_ORDER_ID = market_buy_order["orderId"]
-    #         BUY_ORDER_SYMBOL = market_buy_order["symbol"]
-    #         BUY_ORDER_QTY = float(market_buy_order["executedQty"])
-    #         BUY_ORDER_PRICE = float(market_buy_order["cummulativeQuoteQty"]) / float(market_buy_order["executedQty"])
-    #         BUY_ORDER_ACTION = market_buy_order["side"]
-    #         BUY_ORDER_TYPE = market_buy_order["type"]
-    #         buy_order_executed_time = datetime.now()
-    #
-    #         cursor.execute("select qty from buy_orders where symbol = %s", [BUY_ORDER_SYMBOL])
-    #         r_1 = cursor.fetchall()
-    #         qty_results = r_1[0][0]
-    #         qty_to_be_updated = float(qty_results) + BUY_ORDER_QTY
-    #         print(f"qty up - {qty_to_be_updated}")
-    #
-    #         cursor.execute("select price from buy_orders where symbol = %s", [BUY_ORDER_SYMBOL])
-    #         r_2 = cursor.fetchall()
-    #         price_results = r_2[0][0]
-    #         price_to_be_updated = float(price_results) + float(market_buy_order["cummulativeQuoteQty"])
-    #         print(f"price up - {price_to_be_updated}")
-    #
-    #         cursor.execute("update buy_orders set qty = %s, price = %s where symbol = %s",
-    #                        [qty_to_be_updated, price_to_be_updated, BUY_ORDER_SYMBOL])
-    #         conn.commit()
-    #         print("Updated")
-    #
-    #         cursor.execute("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty) values (%s, %s, %s, %s, %s, %s, %s)",[buy_order_executed_time, BUY_ORDER_SYMBOL, BUY_ORDER_ID, BUY_ORDER_ACTION, BUY_ORDER_TYPE,BUY_ORDER_PRICE, BUY_ORDER_QTY])
-    #         conn.commit()
-    #
-    #         entry_price = float(market_buy_order["cummulativeQuoteQty"]) / float(market_buy_order["executedQty"])
-    #         print(f"entry price = {entry_price}")
-    #         stop_loss_percentage = alert_response["short_stop_loss_percent"]
-    #         take_profit_percentage = alert_response["short_take_profit_percent"]
-    #
-    #         tp1_size = alert_response["tp_1_pos_size"]
-    #         tp1_percent = alert_response["tp_1_percent"]
-    #         tp2_size = alert_response["tp_2_pos_size"]
-    #         tp2_percent = alert_response["tp_2_percent"]
-    #         tp3_size = alert_response["tp_3_pos_size"]
-    #         tp3_percent = alert_response["tp_3_percent"]
-    #
-    #         def sellable_quantity(SPOT_SYMBOL, SPOT_QUANTITY):
-    #             quantity = float(SPOT_QUANTITY) * 0.998
-    #             info = client.get_symbol_info(SPOT_SYMBOL)
-    #             for x in info["filters"]:
-    #                 if x["filterType"] == "LOT_SIZE":
-    #                     stepSize = float(x["stepSize"])
-    #                     print(f"step size = {stepSize}")
-    #
-    #             truncate_num = math.log10(1 / stepSize)
-    #             quantity = math.floor((quantity) * 10 ** truncate_num) / 10 ** truncate_num
-    #             return quantity
-    #
-    #         SELLABLE_QTY = sellable_quantity(SPOT_SYMBOL, SPOT_QUANTITY)
-    #         print(f"Sellable qty = {SELLABLE_QTY}")
-    #
-    #         SELLABLE_1 = sellable_quantity(SPOT_SYMBOL, (SPOT_QUANTITY * tp1_size))
-    #         print(f"Sellable qty_1 = {SELLABLE_1}")
-    #         SELLABLE_2 = sellable_quantity(SPOT_SYMBOL, (SPOT_QUANTITY * tp2_size))
-    #         print(f"Sellable qty_2 = {SELLABLE_2}")
-    #         SELLABLE_3 = sellable_quantity(SPOT_SYMBOL, (SPOT_QUANTITY * tp3_size))
-    #         print(f"Sellable qty_3 = {SELLABLE_3}")
-    #
-    #         def s_sellable_stop_loss(SPOT_SYMBOL, SHORT_STOP_LOSS_BP):
-    #             data_from_api = client.get_exchange_info()
-    #             symbol_info = next(filter(lambda x: x['symbol'] == SPOT_SYMBOL, data_from_api['symbols']))
-    #             price_filters = next(filter(lambda x: x['filterType'] == 'PRICE_FILTER', symbol_info['filters']))
-    #             tick_size = price_filters["tickSize"]
-    #             num = Decimal(tick_size)
-    #             price_precision = int(len(str(num.normalize())) - 2)
-    #             price = round(SHORT_STOP_LOSS_BP, price_precision)
-    #             return price
-    #
-    #         SHORT_STOP_LOSS = entry_price * stop_loss_percentage
-    #         print(f"SHORT STOP LOSS = {SHORT_STOP_LOSS}")
-    #
-    #         SHORT_TAKE_PROFIT = entry_price * take_profit_percentage
-    #         print((f"SHORT TAKE PROFIT = {SHORT_TAKE_PROFIT}"))
-    #         SHORT_TAKE_PROFIT_1 = entry_price * tp1_percent
-    #         print((f"SHORT TAKE PROFIT_1 = {SHORT_TAKE_PROFIT_1}"))
-    #         SHORT_TAKE_PROFIT_2 = entry_price * tp2_percent
-    #         print((f"SHORT TAKE PROFIT_2 = {SHORT_TAKE_PROFIT_2}"))
-    #         SHORT_TAKE_PROFIT_3 = entry_price * tp3_percent
-    #         print((f"SHORT TAKE PROFIT_3 = {SHORT_TAKE_PROFIT_3}"))
-    #
-    #         def s_sellable_take_profit(SPOT_SYMBOL, TAKE_PROFIT_PRICE_BP):
-    #             data_from_api = client.get_exchange_info()
-    #             symbol_info = next(filter(lambda x: x['symbol'] == SPOT_SYMBOL, data_from_api['symbols']))
-    #             price_filters = next(filter(lambda x: x['filterType'] == 'PRICE_FILTER', symbol_info['filters']))
-    #             tick_size = price_filters["tickSize"]
-    #             num = Decimal(tick_size)
-    #             price_precision = int(len(str(num.normalize())) - 2)
-    #             price = round(TAKE_PROFIT_PRICE_BP, price_precision)
-    #             return price
-    #
-    #         STOP_LOSS_PRICE_BP = entry_price - SHORT_STOP_LOSS
-    #         STOP_LOSS_PRICE_FINAL = s_sellable_stop_loss(SPOT_SYMBOL, STOP_LOSS_PRICE_BP)
-    #         print(f"Stop loss price final = {STOP_LOSS_PRICE_FINAL}")
-    #         TAKE_PROFIT_PRICE_BP = entry_price + SHORT_TAKE_PROFIT
-    #         TAKE_PROFIT_PRICE_FINAL = s_sellable_take_profit(SPOT_SYMBOL, TAKE_PROFIT_PRICE_BP)
-    #         print(f"Take profit price final = {TAKE_PROFIT_PRICE_FINAL}")
-    #         TAKE_PROFIT_PRICE_BP_1 = entry_price + SHORT_TAKE_PROFIT_1
-    #         TAKE_PROFIT_PRICE_BP_2 = entry_price + SHORT_TAKE_PROFIT_2
-    #         TAKE_PROFIT_PRICE_BP_3 = entry_price + SHORT_TAKE_PROFIT_3
-    #         TAKE_PROFIT_PRICE_FINAL_1 = s_sellable_take_profit(SPOT_SYMBOL, TAKE_PROFIT_PRICE_BP_1)
-    #         TAKE_PROFIT_PRICE_FINAL_2 = s_sellable_take_profit(SPOT_SYMBOL, TAKE_PROFIT_PRICE_BP_2)
-    #         TAKE_PROFIT_PRICE_FINAL_3 = s_sellable_take_profit(SPOT_SYMBOL, TAKE_PROFIT_PRICE_BP_3)
-    #         print(f"Take profit price final_1 = {TAKE_PROFIT_PRICE_FINAL_1}")
-    #         print(f"Take profit price final_2 = {TAKE_PROFIT_PRICE_FINAL_2}")
-    #         print(f"Take profit price final_3 = {TAKE_PROFIT_PRICE_FINAL_3}")
-    #
-    #         exit_order_type_number = alert_response["exit_order_type"]
-    #         if exit_order_type_number == 1:
-    #             exit_order_type = "Limit"
-    #         else:
-    #             exit_order_type = "Market"
-    #
-    #         def execute_market_oco_order():
-    #             market_oco_order = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_QTY,
-    #                                                      price=TAKE_PROFIT_PRICE_FINAL, stopPrice=STOP_LOSS_PRICE_FINAL)
-    #             print(f"market oco order = {market_oco_order}")
-    #             for item in market_oco_order["orderReports"]:
-    #                 market_oco_order_ID = item["orderId"]
-    #                 print(market_oco_order_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_oco_order_ID},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         def execute_market_oco_order_1():
-    #             market_oco_order_1 = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_1,
-    #                                                        price=TAKE_PROFIT_PRICE_FINAL_1,
-    #                                                        stopPrice=STOP_LOSS_PRICE_FINAL)
-    #             for item in market_oco_order_1["orderReports"]:
-    #                 market_oco_order_1_ID = item["orderId"]
-    #                 print(market_oco_order_1_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_oco_order_1_ID},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         def execute_market_oco_order_2():
-    #             market_oco_order_2 = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_2,
-    #                                                        price=TAKE_PROFIT_PRICE_FINAL_2,
-    #                                                        stopPrice=STOP_LOSS_PRICE_FINAL)
-    #             for item in market_oco_order_2["orderReports"]:
-    #                 market_oco_order_2_ID = item["orderId"]
-    #                 print(market_oco_order_2_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_oco_order_2_ID},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         def execute_market_oco_order_3():
-    #             market_oco_order_3 = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_3,
-    #                                                        price=TAKE_PROFIT_PRICE_FINAL_3,
-    #                                                        stopPrice=STOP_LOSS_PRICE_FINAL)
-    #             for item in market_oco_order_3["orderReports"]:
-    #                 market_oco_order_3_ID = item["orderId"]
-    #                 print(market_oco_order_3_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_oco_order_3_ID},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         ####################################################################################################################################################################################################
-    #         def execute_market_stop_loss_order():
-    #             market_stop_loss_order = client.create_order(symbol=SPOT_SYMBOL, side="SELL", type="STOP_LOSS",
-    #                                                          quantity=SELLABLE_QTY, stopPrice=STOP_LOSS_PRICE_FINAL)
-    #             market_stop_loss_order_ID = market_stop_loss_order["orderId"]
-    #             print(market_stop_loss_order_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_stop_loss_order_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_market_take_profit_order():
-    #             market_take_profit_order = client.create_order(symbol=SPOT_SYMBOL, side="SELL", type="TAKE_PROFIT",
-    #                                                            quantity=SELLABLE_QTY, stopPrice=TAKE_PROFIT_PRICE_FINAL)
-    #             market_take_profit_order_ID = market_take_profit_order["orderId"]
-    #             print(market_take_profit_order_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_take_profit_order_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_market_tp_order_1():
-    #             market_take_profit_order_1 = client.create_order(symbol=SPOT_SYMBOL, side="SELL", type="TAKE_PROFIT",
-    #                                                              quantity=SELLABLE_1,
-    #                                                              stopPrice=TAKE_PROFIT_PRICE_FINAL_1)
-    #             market_take_profit_order_1_ID = market_take_profit_order_1["orderId"]
-    #             print(market_take_profit_order_1_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_take_profit_order_1_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_market_tp_order_2():
-    #             market_take_profit_order_2 = client.create_order(symbol=SPOT_SYMBOL, side="SELL", type="TAKE_PROFIT",
-    #                                                              quantity=SELLABLE_2,
-    #                                                              stopPrice=TAKE_PROFIT_PRICE_FINAL_2)
-    #             market_take_profit_order_2_ID = market_take_profit_order_2["orderId"]
-    #             print(market_take_profit_order_2_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_take_profit_order_2_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_market_tp_order_3():
-    #             market_take_profit_order_3 = client.create_order(symbol=SPOT_SYMBOL, side="SELL", type="TAKE_PROFIT",
-    #                                                              quantity=SELLABLE_3,
-    #                                                              stopPrice=TAKE_PROFIT_PRICE_FINAL_3)
-    #             market_take_profit_order_3_ID = market_take_profit_order_3["orderId"]
-    #             print(market_take_profit_order_3_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({market_take_profit_order_3_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         ###########################################################################################################################################################################################
-    #
-    #         def execute_limit_oco_order():
-    #             limit_oco_order = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_QTY,
-    #                                                     price=TAKE_PROFIT_PRICE_FINAL, stopPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                     stopLimitPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                     stopLimitTimeInForce="GTC")
-    #             print(f"limit oco order = {limit_oco_order}")
-    #             for item in limit_oco_order["orderReports"]:
-    #                 limit_oco_order_ID = item["orderId"]
-    #                 print(limit_oco_order_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_oco_order_ID},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         def execute_limit_oco_order_1():
-    #             limit_oco_order_1 = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_1,
-    #                                                       price=TAKE_PROFIT_PRICE_FINAL_1,
-    #                                                       stopPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                       stopLimitPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                       stopLimitTimeInForce="GTC")
-    #             print(f"limit oco order_1 = {limit_oco_order_1}")
-    #             for item in limit_oco_order_1["orderReports"]:
-    #                 limit_oco_order_1_ID = item["orderId"]
-    #                 print(limit_oco_order_1_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_oco_order_1},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         def execute_limit_oco_order_2():
-    #             limit_oco_order_2 = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_2,
-    #                                                       price=TAKE_PROFIT_PRICE_FINAL_2,
-    #                                                       stopPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                       stopLimitPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                       stopLimitTimeInForce="GTC")
-    #             print(f"limit oco order_2 = {limit_oco_order_2}")
-    #             for item in limit_oco_order_2["orderReports"]:
-    #                 limit_oco_order_2_ID = item["orderId"]
-    #                 print(limit_oco_order_2_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_oco_order_2},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         def execute_limit_oco_order_3():
-    #             limit_oco_order_3 = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SELLABLE_3,
-    #                                                       price=TAKE_PROFIT_PRICE_FINAL_3,
-    #                                                       stopPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                       stopLimitPrice=STOP_LOSS_PRICE_FINAL,
-    #                                                       stopLimitTimeInForce="GTC")
-    #             print(f"limit oco order_3 = {limit_oco_order_3}")
-    #             for item in limit_oco_order_3["orderReports"]:
-    #                 limit_oco_order_3_ID = item["orderId"]
-    #                 print(limit_oco_order_3_ID)
-    #                 cursor.execute(
-    #                     f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_oco_order_3_ID},{entry_price})""")
-    #                 conn.commit()
-    #                 print("Records inserted")
-    #
-    #         def execute_limit_stop_loss_order():
-    #             limit_stop_loss_order = client.create_order(symbol=SPOT_SYMBOL, side="SELL", type="STOP_LOSS_LIMIT",
-    #                                                         quantity=SELLABLE_QTY, price=STOP_LOSS_PRICE_FINAL,
-    #                                                         stopPrice=STOP_LOSS_PRICE_FINAL, timeInForce="GTC")
-    #             print(f"limit stop loss order = {limit_stop_loss_order}")
-    #             limit_stop_loss_order_ID = limit_stop_loss_order["orderId"]
-    #             print(limit_stop_loss_order_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_stop_loss_order_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_limit_take_profit_order():
-    #             limit_take_proft_order = client.create_order(symbol=SPOT_SYMBOL, side="SELL", type="TAKE_PROFIT_LIMIT",
-    #                                                          quantity=SELLABLE_QTY, price=TAKE_PROFIT_PRICE_FINAL,
-    #                                                          stopPrice=TAKE_PROFIT_PRICE_FINAL, timeInForce="GTC")
-    #             print(f"limit take profit order = {limit_take_proft_order}")
-    #             limit_take_proft_order_ID = limit_take_proft_order["orderId"]
-    #             print(limit_take_proft_order_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_take_proft_order_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_limit_tp_order_1():
-    #             limit_take_proft_order_1 = client.create_order(symbol=SPOT_SYMBOL, side="SELL",
-    #                                                            type="TAKE_PROFIT_LIMIT", quantity=SELLABLE_1,
-    #                                                            price=TAKE_PROFIT_PRICE_FINAL_1,
-    #                                                            stopPrice=TAKE_PROFIT_PRICE_FINAL_1, timeInForce="GTC")
-    #             print(f"limit take profit order_1 = {limit_take_proft_order_1}")
-    #             limit_take_proft_order_1_ID = limit_take_proft_order_1["orderId"]
-    #             print(limit_take_proft_order_1_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_take_proft_order_1_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_limit_tp_order_2():
-    #             limit_take_proft_order_2 = client.create_order(symbol=SPOT_SYMBOL, side="SELL",
-    #                                                            type="TAKE_PROFIT_LIMIT", quantity=SELLABLE_2,
-    #                                                            price=TAKE_PROFIT_PRICE_FINAL_2,
-    #                                                            stopPrice=TAKE_PROFIT_PRICE_FINAL_2, timeInForce="GTC")
-    #             print(f"limit take profit order_2 = {limit_take_proft_order_2}")
-    #             limit_take_proft_order_2_ID = limit_take_proft_order_2["orderId"]
-    #             print(limit_take_proft_order_2_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_take_proft_order_2_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         def execute_limit_tp_order_3():
-    #             limit_take_proft_order_3 = client.create_order(symbol=SPOT_SYMBOL, side="SELL",
-    #                                                            type="TAKE_PROFIT_LIMIT", quantity=SELLABLE_3,
-    #                                                            price=TAKE_PROFIT_PRICE_FINAL_3,
-    #                                                            stopPrice=TAKE_PROFIT_PRICE_FINAL_3, timeInForce="GTC")
-    #             print(f"limit take profit order_3 = {limit_take_proft_order_3}")
-    #             limit_take_proft_order_3_ID = limit_take_proft_order_3["orderId"]
-    #             print(limit_take_proft_order_3_ID)
-    #             cursor.execute(
-    #                 f"""INSERT INTO id_list (order_id, entry_price) VALUES ({limit_take_proft_order_3_ID},{entry_price})""")
-    #             conn.commit()
-    #             print("Records inserted")
-    #
-    #         if SHORT_STOP_LOSS > 0 and SHORT_TAKE_PROFIT > 0 and exit_order_type == "Market":
-    #             if tp1_percent == "" or tp1_percent == 0:
-    #                 execute_market_oco_order()
-    #             elif tp1_percent > 0:
-    #                 execute_market_oco_order_1()
-    #                 if tp2_percent > 0:
-    #                     execute_market_oco_order_2()
-    #                 if tp3_percent > 0:
-    #                     execute_market_oco_order_3()
-    #
-    #         if SHORT_STOP_LOSS > 0 and SHORT_TAKE_PROFIT > 0 and exit_order_type == "Limit":
-    #             if tp1_percent == "" or tp1_percent == 0:
-    #                 execute_limit_oco_order()
-    #             elif tp1_percent > 0:
-    #                 execute_limit_oco_order_1()
-    #                 if tp2_percent > 0:
-    #                     execute_limit_oco_order_2()
-    #                 if tp3_percent > 0:
-    #                     execute_limit_oco_order_3()
-    #
-    #         if SHORT_STOP_LOSS > 0 and (
-    #                 SHORT_TAKE_PROFIT == "" or SHORT_TAKE_PROFIT == 0) and exit_order_type == "Market":
-    #             execute_market_stop_loss_order()
-    #
-    #         if SHORT_TAKE_PROFIT > 0 and (
-    #                 SHORT_STOP_LOSS == "" or SHORT_STOP_LOSS == 0) and exit_order_type == "Market":
-    #             if tp1_percent == "" or tp1_percent == 0:
-    #                 execute_market_take_profit_order()
-    #             elif tp1_percent > 0:
-    #                 execute_market_tp_order_1()
-    #                 if tp2_percent > 0:
-    #                     execute_market_tp_order_2()
-    #                 if tp3_percent > 0:
-    #                     execute_market_tp_order_3()
-    #
-    #         if SHORT_STOP_LOSS > 0 and (
-    #                 SHORT_TAKE_PROFIT == "" or SHORT_TAKE_PROFIT == 0) and exit_order_type == "Limit":
-    #             execute_limit_stop_loss_order()
-    #
-    #         if SHORT_TAKE_PROFIT > 0 and (SHORT_STOP_LOSS == "" or SHORT_STOP_LOSS == 0) and exit_order_type == "Limit":
-    #             if tp1_percent == "" or tp1_percent == 0:
-    #                 execute_limit_take_profit_order()
-    #             elif tp1_percent > 0:
-    #                 execute_limit_tp_order_1()
-    #                 if tp2_percent > 0:
-    #                     execute_limit_tp_order_2()
-    #                 if tp3_percent > 0:
-    #                     execute_limit_tp_order_3()
-    #
-    # def execute_market_sell_spot_order():
-    #     global SPOT_SYMBOL
-    #     global SPOT_SIDE
-    #     global SPOT_QUANTITY
-    #     if sell_leverage_alert == 1:
-    #         SPOT_SIDE = "SELL"
-    #
-    #         SPOT_SYMBOL = alert_response["coin_pair"]
-    #         SPOT_TYPE_ENTRY = "MARKET"
-    #         SPOT_QUANTITY = alert_response["qty"]
-    #
-    #         sell_order = client.create_order(symbol=SPOT_SYMBOL, side=SPOT_SIDE, type=SPOT_TYPE_ENTRY,
-    #                                          quantity=SPOT_QUANTITY)
-    #         print(f"sell order = {sell_order}")
-    #         SELL_ORDER_SYMBOL = sell_order["symbol"]
-    #         SELL_ORDER_ID = sell_order["orderId"]
-    #         SELL_ORDER_QTY = float(sell_order["executedQty"])
-    #         SELL_ORDER_PRICE = float(sell_order["cummulativeQuoteQty"]) / float(sell_order["executedQty"])
-    #         SELL_ORDER_ACTION = sell_order["side"]
-    #         SELL_ORDER_TYPE = sell_order["type"]
-    #         sell_order_executed_time = datetime.now()
-    #
-    #         cursor.execute("select qty from buy_orders where symbol = %s", [SELL_ORDER_SYMBOL])
-    #         r_1 = cursor.fetchall()
-    #         qty_results = r_1[0][0]
-    #
-    #         cursor.execute("select price from buy_orders where symbol = %s", [SELL_ORDER_SYMBOL])
-    #         r_2 = cursor.fetchall()
-    #         price_results = r_2[0][0]
-    #
-    #         EXISTING_AVG_PRICE = float(price_results) / float(qty_results)
-    #         SELL_PNL = round((SELL_ORDER_PRICE - EXISTING_AVG_PRICE), 2)
-    #         sell_per = (SELL_PNL / EXISTING_AVG_PRICE) * 100
-    #         SELL_PNL_PERCENTAGE = str((round(sell_per, 2))) + "%"
-    #
-    #         qty_to_be_updated = float(qty_results) - SELL_ORDER_QTY
-    #         print(f"qty up - {qty_to_be_updated}")
-    #
-    #         price_to_be_updated = float(price_results) - float(sell_order["cummulativeQuoteQty"])
-    #         print(f"price up - {price_to_be_updated}")
-    #
-    #         cursor.execute("update buy_orders set qty = %s, price = %s where symbol = %s",
-    #                        [qty_to_be_updated, price_to_be_updated, SELL_ORDER_SYMBOL])
-    #         conn.commit()
-    #         print("Updated")
-    #
-    #         cursor.execute("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)",[sell_order_executed_time, SELL_ORDER_SYMBOL, SELL_ORDER_ID, SELL_ORDER_ACTION,SELL_ORDER_TYPE, SELL_ORDER_PRICE, SELL_ORDER_QTY, SELL_PNL, SELL_PNL_PERCENTAGE])
-    #         conn.commit()
-    #
-    # if buy_leverage_alert == 1 and entry_order_type == "Market":
-    #     try:
-    #         execute_market_buy_spot_order()
-    #     except Exception as e:
-    #         error_occured = f"{e}"
-    #         error_occured_time = datetime.now()
-    #
-    #         cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time,error_occured])
-    #         conn.commit()
-    #
-    # if sell_leverage_alert == 1 and entry_order_type == "Market":
-    #     try:
-    #         execute_market_sell_spot_order()
-    #     except Exception as e:
-    #         error_occured = f"{e}"
-    #         print(error_occured)
-    #         error_occured_time = datetime.now()
-    #
-    #         cursor.execute("insert into error_log(occured_time, symbol, order_action, entry_order_type, exit_order_type, quantity, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[error_occured_time, SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY,error_occured])
-    #         conn.commit()
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=80)
+    app.run(host='0.0.0.0',port=80,debug=True)
+
+
+# Webhook triggered
+# <Request 'http://3.126.245.49/webhook' [POST]>
+# first method worked = {"use_bybit":"1","coin_pair":"BTCUSDT","entry_order_type":"0","exit_order_type":"0","margin_mode":"1","qty_in_percentage": "true","qty":"1476.2828415986","buy_leverage":"1","sell_leverage":"1","long_stop_loss_percent":0.2032130914,"long_take_profit_percent":0.3048196371,"short_stop_loss_percent":0.2032130914,"short_take_profit_percent":0.3048196371,"enable_multi_tp":"true","tp_1_pos_size":"33","tp_1_percent":"0.1005904802","tp_2_pos_size":"33","tp_2_percent":"0.2011809605","tp_3_pos_size":"100","tp_3_percent":"0.3048196371","advanced_mode": "1","stop_bot_below_balance":"20","order_time_out":"240","exit_existing_trade": "True","comment": "","position": "Enter Short",}
+# 34.212.75.30 - - [17/Sep/2022 20:37:00] "POST /webhook HTTP/1.1" 200 -

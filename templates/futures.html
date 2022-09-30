@@ -103,7 +103,7 @@
               </a>
             </li>
             <li>
-              <a href="{{ url_for('index') }}" class="nav-link px-3 active">
+              <a href="{{ url_for('get_futures') }}" class="nav-link px-3 active">
                 <span class="me-2"><i class="bi bi-speedometer2"></i></span>
                 <span>Binance</span>
               </a>
@@ -194,7 +194,7 @@
         </div>
         <div class="row">
           <div class="col-md-12">
-            <h4 class="mb-sm-3">Binance Spot Dashboard</h4>
+            <h4 class="mb-sm-3">Binance Futures Dashboard</h4>
           </div>
         </div>
         <div class="row">
@@ -212,13 +212,13 @@
           </div>
           <div class="col-md-3 pe-4">
             <div class="card bg-me-m text-white h-110">
-              <h5 class="card-title">Overall Spot Balance</h5>
+              <h5 class="card-title">Overall Futures Balance</h5>
               <p class="card-text">{{spot}}</p>
             </div>
           </div>
           <div class="col-md-3 p3-4">
             <div class="card bg-me-m text-white h-110">
-              <h5 class="card-title">Overall Spot PnL</h5>
+              <h5 class="card-title">Overall Futures PnL</h5>
               <p class="card-text">{{pnl}}</p>
             </div>
           </div>
@@ -226,7 +226,7 @@
         <div class="row">
           <div class="col-md-12">
               <h4>Charts</h4>
-              <form action="/binance_spot" method="post">
+              <form action="/binance_futures" method="post">
               <label class="float-left" for="coins">Choose a coin:</label>
                     <select name="coins" class="coins">
                         <option value="none" selected disabled hidden>{{coin_pair_name}}</option>
@@ -407,6 +407,91 @@
             </div>
           </div>
         </div>
+
+
+        <div class="row">
+          <div class="col-md-12 mb-3">
+            <div class="card">
+              <div class="card-header">
+                <span><i class="bi bi-table me-2"></i></span> Open Positions Log
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table
+                    id="example"
+                    class="table table-striped data-table"
+                    style="width: 100%"
+                  >
+                    <thead>
+                      <tr>
+                        <th>Created Date</th>
+                        <th>Symbol</th>
+                        <th>Position Side</th>
+                        <th>Entry Price</th>
+                        <th>Current Market Price</th>
+                        <th>Liquidation Price</th>
+                        <th>Margin Type<</th>
+                        <th>Leverage</th>
+                        <th>Position quantity</th>
+                        <th>Unrealized Profit or Loss</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for i in range(0,pos_list_length) %}
+                      <tr>
+                          <td>
+                              <p>{{pos_rowResults[i][0]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][1]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][2]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][3]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][4]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][5]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][6]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][7]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][8]}}</p>
+                          </td>
+                          <td>
+                              <p>{{pos_rowResults[i][9]}}</p>
+                          </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th>Created Date</th>
+                        <th>Symbol</th>
+                        <th>Position Side</th>
+                        <th>Entry Price</th>
+                        <th>Current Market Price</th>
+                        <th>Liquidation Price</th>
+                        <th>Margin Type<</th>
+                        <th>Leverage</th>
+                        <th>Position quantity</th>
+                        <th>Unrealized Profit or Loss</th>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="row">
           <div class="col-md-12 mb-3">
             <div class="card">
@@ -429,8 +514,7 @@
                         <th>Order Type<</th>
                         <th>Executed Price</th>
                         <th>Executed Qty</th>
-                        <th>Pnl (Sell orders only)</th>
-                        <th>Pnl %</th>
+                        <th>Pnl</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -460,9 +544,6 @@
                           <td>
                               <p>{{trade_recentRecords[i][7]}}</p>
                           </td>
-                          <td>
-                              <p>{{trade_recentRecords[i][8]}}</p>
-                          </td>
                       </tr>
                       {% endfor %}
                     </tbody>
@@ -475,8 +556,7 @@
                         <th>Order Type<</th>
                         <th>Executed Price</th>
                         <th>Executed Qty</th>
-                        <th>Pnl (Sell orders only)</th>
-                        <th>Pnl %</th>
+                        <th>Pnl</th>
                       </tr>
                     </tfoot>
                   </table>
