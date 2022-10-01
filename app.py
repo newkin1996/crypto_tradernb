@@ -298,7 +298,10 @@ def index():
         api_secret = ""
 
     if api_key and api_secret != "":
-        client = Client(api_key, api_secret)
+        try:
+            client = Client(api_key, api_secret)
+        except:
+            return render_template('invaid_key.html')
 
         try:
 
@@ -386,17 +389,20 @@ def index():
         trade_rowResults = cursor.fetchall()
         trade_list_length = len(trade_rowResults)
 
-        deposits = client.get_deposit_history()
-        total_deposited_amt = float(0)
-        for deposit in deposits:
-            deposited_coin_name = deposit["coin"]
-            deposited_amount = float(deposit["amount"])
-            if deposited_coin_name == "USDT":
-                total_deposited_amt += deposited_amount
-            else:
-                current_price_USDT = client.get_symbol_ticker(symbol=deposited_coin_name + "USDT")["price"]
-                total_deposited_amt += deposited_amount * float(current_price_USDT)
-        deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
+        try:
+            deposits = client.get_deposit_history()
+            total_deposited_amt = float(0)
+            for deposit in deposits:
+                deposited_coin_name = deposit["coin"]
+                deposited_amount = float(deposit["amount"])
+                if deposited_coin_name == "USDT":
+                    total_deposited_amt += deposited_amount
+                else:
+                    current_price_USDT = client.get_symbol_ticker(symbol=deposited_coin_name + "USDT")["price"]
+                    total_deposited_amt += deposited_amount * float(current_price_USDT)
+            deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
+        except:
+            return render_template('invaid_key.html')
 
         try:
             margin_info = client.get_margin_account()["userAssets"]
@@ -525,7 +531,10 @@ def get_futures():
         api_secret = ""
 
     if api_key and api_secret != "":
-        client = Client(api_key, api_secret)
+        try:
+            client = Client(api_key, api_secret)
+        except:
+            return render_template('invaid_key.html')
 
         try:
 
@@ -648,17 +657,21 @@ def get_futures():
         trade_rowResults = cursor.fetchall()
         trade_list_length = len(trade_rowResults)
 
-        deposits = client.get_deposit_history()
-        total_deposited_amt = float(0)
-        for deposit in deposits:
-            deposited_coin_name = deposit["coin"]
-            deposited_amount = float(deposit["amount"])
-            if deposited_coin_name == "USDT":
-                total_deposited_amt += deposited_amount
-            else:
-                current_price_USDT = client.get_symbol_ticker(symbol=deposited_coin_name + "USDT")["price"]
-                total_deposited_amt += deposited_amount * float(current_price_USDT)
-        deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
+        try:
+            deposits = client.get_deposit_history()
+            total_deposited_amt = float(0)
+            for deposit in deposits:
+                deposited_coin_name = deposit["coin"]
+                deposited_amount = float(deposit["amount"])
+                if deposited_coin_name == "USDT":
+                    total_deposited_amt += deposited_amount
+                else:
+                    current_price_USDT = client.get_symbol_ticker(symbol=deposited_coin_name + "USDT")["price"]
+                    total_deposited_amt += deposited_amount * float(current_price_USDT)
+            deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
+        except:
+            return render_template('invaid_key.html')
+
 
         try:
             margin_info = client.get_margin_account()["userAssets"]
