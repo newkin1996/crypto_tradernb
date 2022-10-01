@@ -807,21 +807,6 @@ def process_alert():
             conn.commit()
 
         try:
-            req_trading_coin = alert_response["trading_coin"]
-        except:
-            SPOT_SYMBOL = "NA"
-            SPOT_SIDE = "NA"
-            JSON_ENTRY = "NA"
-            JSON_EXIT = "NA"
-            SPOT_QUANTITY = "NA"
-            error_occured_time = datetime.now()
-            error_occured = "Invalid/Empty trading coin"
-            cursor.execute(
-                "insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
-                [SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
-            conn.commit()
-
-        try:
             req_coin_pair = alert_response["coin_pair"]
         except:
             SPOT_SYMBOL = "NA"

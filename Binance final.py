@@ -35,23 +35,23 @@ alert_response = {"exchange":"Binance",
   "long_leverage": 2,
   "short_leverage": 2,
  "margin_mode":"Isolated",
- "qty_type": "As Percentage",
- "qty": 3,
+ "qty_type": "Fixed",
+ "qty": 13,
  "trade_type": "Spot",
- "long_stop_loss_percent":0.2,
- "long_take_profit_percent":0.3,
- "short_stop_loss_percent":0.2,
- "short_take_profit_percent":0.3,
- "enable_multi_tp":"Yes",
- "tp_1_pos_size":0.3,
- "tp_1_percent":0.1,
- "tp_2_pos_size":0.2,
- "tp_2_percent":0.2,
- "tp_3_pos_size":0.5,
- "tp_3_percent":0.3,
- "stop_bot_below_balance":20,
- "order_time_out":240,
- "position_type": "Enter Short"}
+ "long_stop_loss_percent":0,
+ "long_take_profit_percent":0,
+ "short_stop_loss_percent":0,
+ "short_take_profit_percent":0,
+ "enable_multi_tp":"No",
+ "tp_1_pos_size":0,
+ "tp_1_percent":0,
+ "tp_2_pos_size":0,
+ "tp_2_percent":0,
+ "tp_3_pos_size":0,
+ "tp_3_percent":0,
+ "stop_bot_below_balance":5,
+ "order_time_out":120,
+ "position_type": "Enter_long"}
 
 try:
     try:
@@ -77,19 +77,6 @@ try:
         SPOT_QUANTITY = "NA"
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty base coin"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
-        conn.commit()
-
-    try:
-        req_trading_coin = alert_response["trading_coin"]
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty trading coin"
         cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
         conn.commit()
 
