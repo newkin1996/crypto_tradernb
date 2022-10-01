@@ -534,7 +534,7 @@ def get_futures():
         try:
             client = Client(api_key, api_secret)
         except:
-            return render_template('invaid_key.html')
+            return render_template('invalid_key.html')
 
         try:
 
@@ -670,7 +670,7 @@ def get_futures():
                     total_deposited_amt += deposited_amount * float(current_price_USDT)
             deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
         except:
-            return render_template('invaid_key.html')
+            return render_template('invalid_key.html')
 
 
         try:
