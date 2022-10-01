@@ -26,7 +26,7 @@ colors = [
 
 #establishing the connection
 conn = psycopg2.connect(
-   database="gpu", user='postgres', password='postgres', host='127.0.0.1', port= '5432')
+   database="gpu", user='postgres', password='postgres', host='127.0.0.1', port= '5433')
 #Creating a cursor object using the cursor() method
 cursor = conn.cursor()
 
@@ -262,7 +262,7 @@ def gen_json():
 def index():
     # establishing the connection
     conn = psycopg2.connect(
-        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5432')
+        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5433')
     # Creating a cursor object using the cursor() method
     cursor = conn.cursor()
 
@@ -301,7 +301,7 @@ def index():
         try:
             client = Client(api_key, api_secret)
         except:
-            return render_template('invaid_key.html')
+            return render_template('invalid_key.html')
 
         try:
 
@@ -402,7 +402,7 @@ def index():
                     total_deposited_amt += deposited_amount * float(current_price_USDT)
             deposits_display = f"Deposited Amt (USD): {round((total_deposited_amt), 2)}"
         except:
-            return render_template('invaid_key.html')
+            return render_template('invalid_key.html')
 
         try:
             margin_info = client.get_margin_account()["userAssets"]
@@ -501,7 +501,7 @@ def index():
 def get_futures():
     # establishing the connection
     conn = psycopg2.connect(
-        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5432')
+        database="gpu", user='postgres', password='postgres', host='127.0.0.1', port='5433')
     # Creating a cursor object using the cursor() method
     cursor = conn.cursor()
 
