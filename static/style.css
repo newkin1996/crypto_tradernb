@@ -44,6 +44,7 @@ button {
     display: block;
     grid-template-columns: 2fr 1fr;
     grid-gap: 20px;
+    width: 90%;
     padding: 12px;
     padding-top: 0;
     align: center;
@@ -54,6 +55,7 @@ button {
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
+    width: 90%;
     align: center;
 }
 
