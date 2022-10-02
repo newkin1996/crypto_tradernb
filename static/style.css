@@ -47,6 +47,8 @@ button {
     padding: 12px;
     padding-top: 0;
     align: center;
+    max-height: 100%;
+    width: 99%;
 }
 
 .chart {
@@ -54,8 +56,8 @@ button {
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
-    height: 100%;
     align: center;
+    width: 99%;
 }
 
 .chart h2 {
