@@ -29,26 +29,26 @@ print("Connection established to: ",data)
 
 alert_response = {"exchange":"Binance",
  "base_coin":"USDT",
- "coin_pair": "DOTUSDT",
- "entry_order_type":"Market",
- "exit_order_type":"Limit",
+ "coin_pair": "SANTOSUSDT",
+ "entry_type":"Market",
+ "exit_type":"Limit",
   "long_leverage": 2,
   "short_leverage": 2,
  "margin_mode":"Isolated",
  "qty_type": "Fixed",
- "qty": 13,
+ "qty": 18,
  "trade_type": "Spot",
- "long_stop_loss_percent":0,
+ "long_stop_loss_percent":0.2,
  "long_take_profit_percent":0,
  "short_stop_loss_percent":0,
  "short_take_profit_percent":0,
- "enable_multi_tp":"No",
- "tp_1_pos_size":0,
- "tp_1_percent":0,
+ "enable_multi_tp":"Yes",
+ "tp_1_pos_size":80,
+ "tp1_percent":0.7,
  "tp_2_pos_size":0,
- "tp_2_percent":0,
+ "tp2_percent":0,
  "tp_3_pos_size":0,
- "tp_3_percent":0,
+ "tp3_percent":0,
  "stop_bot_below_balance":5,
  "order_time_out":120,
  "position_type": "Enter_long"}
@@ -56,41 +56,31 @@ alert_response = {"exchange":"Binance",
 try:
     try:
         req_exchange = alert_response["exchange"]
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
+    except Exception as e:
+        print(e)
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty exchange type"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",[error_occured_time, error_occured])
         conn.commit()
 
     try:
         req_base_coin = alert_response["base_coin"]
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
+    except Exception as e:
+        print(e)
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty base coin"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                       [error_occured_time, error_occured])
         conn.commit()
 
     try:
         req_coin_pair = alert_response["coin_pair"]
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
+    except Exception as e:
+        print(e)
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty coin pair"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                       [error_occured_time, error_occured])
         conn.commit()
 
     req_entry_type = alert_response["entry_type"].upper()
@@ -101,45 +91,36 @@ try:
 
     try:
         req_qty_type = alert_response["qty_type"]
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
+    except Exception as e:
+        print(e)
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty qty type"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                       [error_occured_time, error_occured])
         conn.commit()
 
     try:
         req_qty = float(alert_response["qty"])
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
+    except Exception as e:
+        print(e)
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty qty"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                       [error_occured_time, error_occured])
         conn.commit()
 
     try:
         req_trade_type = alert_response["trade_type"]
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
+    except Exception as e:
+        print(e)
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty trade type"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                       [error_occured_time, error_occured])
         conn.commit()
 
-    req_buy_leverage = alert_response["buy_leverage"]
-    req_sell_leverage = alert_response["sell_leverage"]
+    req_long_leverage = alert_response["long_leverage"]
+    req_short_leverage = alert_response["short_leverage"]
 
     req_long_stop_loss_percent = (float(alert_response["long_stop_loss_percent"]))/100
     req_long_take_profit_percent = (float(alert_response["long_take_profit_percent"]))/100
@@ -160,25 +141,19 @@ try:
 
     try:
         req_position_type = alert_response["position_type"]
-    except:
-        SPOT_SYMBOL = "NA"
-        SPOT_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        SPOT_QUANTITY = "NA"
+    except Exception as e:
+        print(e)
         error_occured_time = datetime.now()
         error_occured = "Invalid/Empty position type"
-        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                       [error_occured_time, error_occured])
         conn.commit()
-except:
-    SPOT_SYMBOL = "NA"
-    SPOT_SIDE = "NA"
-    JSON_ENTRY = "NA"
-    JSON_EXIT = "NA"
-    SPOT_QUANTITY = "NA"
+except Exception as e:
+    print(e)
     error_occured_time = datetime.now()
     error_occured = "Error in parsing json alert"
-    cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+    cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                   [error_occured_time, error_occured])
     conn.commit()
 
 try:
@@ -195,9 +170,11 @@ try:
                 asset = _balance["asset"]
                 if float(_balance["free"]) != 0.0 or float(_balance["locked"]) != 0.0:
                     if asset == req_base_coin:
-                        base_coin_balance = float(_balance["free"]) + float(_balance["locked"])
-                return base_coin_balance
-                break
+                        base_coin_bal = float(_balance["free"]) + float(_balance["locked"])
+                        break
+                else:
+                    base_coin_bal = 0
+            return base_coin_bal
 
 
         def calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin):
@@ -271,6 +248,10 @@ try:
             SPOT_EXIT = "LIMIT"
             print(SPOT_SIDE)
 
+            # STOP_LOSS_PRICE_FINAL_S = cal_price_with_precision(SPOT_SYMBOL=SPOT_SYMBOL,input_price=(STOP_LOSS_PRICE_FINAL * 0.9999))
+            # STOP_LOSS_PRICE_FINAL_B = cal_price_with_precision(SPOT_SYMBOL=SPOT_SYMBOL,
+            #                                                    input_price=(STOP_LOSS_PRICE_FINAL * 1.0009))
+
             try:
                 if SPOT_SIDE == "SELL":
                     limit_oco_order = client.order_oco_sell(symbol=SPOT_SYMBOL, quantity=SPOT_SELL_QUANTITY,
@@ -307,6 +288,7 @@ try:
                         conn.commit()
 
             except Exception as e:
+
                 error_occured = f"{e}"
                 print(error_occured)
 
@@ -368,7 +350,8 @@ try:
 
                                 no_qty = False
                                 break
-                            except:
+                            except Exception as e:
+                                print(e)
                                 pass
 
 
@@ -395,15 +378,19 @@ try:
                             break
                     if active_order_status == "FILLED":
                         break
-                except:
+                except Exception as e:
+                    print(e)
                     pass
             if active_order_status == "FILLED":
                 oco_limit_sell_order = active_order
                 print(f"oco limit sell order = {oco_limit_sell_order}")
             else:
                 for order_id in oco_order_ids:
+                    check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
+                    if check_for_partial["status"] == "PARTIALLY_FILLED":
+                        oco_limit_sell_order = check_for_partial
                     check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
-                    if check_for_cancel["status"] == "CANCELED":
+                    if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
                         print("Already cancelled")
                     else:
                         cancel_oco_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=order_id)
@@ -420,7 +407,7 @@ try:
                 sell_cum_qty = float(oco_limit_sell_order["cummulativeQuoteQty"])
                 TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
                 TOTAL_BUY_SPEND = float(oco_limit_sell_order["cummulativeQuoteQty"])
-                OCO_SELL_ORDER_PRICE = round((float(oco_limit_sell_order["cummulativeQuoteQty"]) / float(oco_limit_sell_order["executedQty"])),2)
+                OCO_SELL_ORDER_PRICE = round((float(oco_limit_sell_order["cummulativeQuoteQty"]) / float(oco_limit_sell_order["executedQty"])),3)
                 OCO_SELL_ORDER_ACTION = oco_limit_sell_order["side"]
                 OCO_SELL_ORDER_TYPE = oco_limit_sell_order["type"]
                 sell_order_executed_time = datetime.now()
@@ -522,10 +509,12 @@ try:
             print(SPOT_SIDE)
             SPOT_EXIT = "LIMIT"
 
+            STOP_LOSS_PRICE_FINAL_A = cal_price_with_precision(SPOT_SYMBOL=SPOT_SYMBOL,input_price=(STOP_LOSS_PRICE_FINAL * 0.9999))
+
             try:
                 limit_stop_loss_order = client.create_order(symbol=SPOT_SYMBOL, side=SPOT_SIDE, type="STOP_LOSS_LIMIT",
                                                             quantity=SPOT_SELL_QUANTITY, price=STOP_LOSS_PRICE_FINAL,
-                                                            stopPrice=STOP_LOSS_PRICE_FINAL, timeInForce="GTC")
+                                                            stopPrice=STOP_LOSS_PRICE_FINAL_A, timeInForce="GTC")
                 print(f"limit stop loss order = {limit_stop_loss_order}")
 
                 if SPOT_SIDE == "BUY":
@@ -572,7 +561,7 @@ try:
                                                                             type="STOP_LOSS_LIMIT",
                                                                             quantity=SPOT_SELL_QUANTITY,
                                                                             price=STOP_LOSS_PRICE_FINAL,
-                                                                            stopPrice=STOP_LOSS_PRICE_FINAL,
+                                                                            stopPrice=STOP_LOSS_PRICE_FINAL_A,
                                                                             timeInForce="GTC")
                                 print(f"limit stop loss order = {limit_stop_loss_order}")
 
@@ -599,7 +588,8 @@ try:
 
                                 no_qty = False
                                 break
-                            except:
+                            except Exception as e:
+                                print(e)
                                 pass
 
             limit_stop_loss_order_ID = limit_stop_loss_order["orderId"]
@@ -614,14 +604,18 @@ try:
                     active_order_status = active_order["status"]
                     if active_order_status == "FILLED":
                         break
-                except:
+                except Exception as e:
+                    print(e)
                     pass
             if active_order_status == "FILLED":
                 enter_long_sell_stop_loss_order = active_order
                 print(f"enter long sell stop loss order={enter_long_sell_stop_loss_order}")
             else:
+                check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
+                if check_for_partial["status"] == "PARTIALLY_FILLED":
+                    enter_long_sell_stop_loss_order = check_for_partial
                 check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
-                if check_for_cancel["status"] == "CANCELED":
+                if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
                     print("Already cancelled")
                 else:
                     cancel_stop_loss_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
@@ -639,7 +633,7 @@ try:
                 sell_cum_qty = float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"])
                 TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
                 TOTAL_BUY_SPEND = float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"])
-                STOP_LOSS_SELL_ORDER_PRICE = round((float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"]) / float(enter_long_sell_stop_loss_order["executedQty"])),2)
+                STOP_LOSS_SELL_ORDER_PRICE = round((float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"]) / float(enter_long_sell_stop_loss_order["executedQty"])),3)
                 STOP_LOSS_SELL_ORDER_ACTION = enter_long_sell_stop_loss_order["side"]
                 STOP_LOSS_SELL_ORDER_TYPE = enter_long_sell_stop_loss_order["type"]
                 sell_order_executed_time = datetime.now()
@@ -819,7 +813,8 @@ try:
 
                                 no_qty = False
                                 break
-                            except:
+                            except Exception as e:
+                                print(e)
                                 pass
 
             limit_take_proft_order_ID = limit_take_proft_order["orderId"]
@@ -835,14 +830,18 @@ try:
                     active_order_status = active_order["status"]
                     if active_order_status == "FILLED":
                         break
-                except:
+                except Exception as e:
+                    print(e)
                     pass
             if active_order_status == "FILLED":
                 enter_long_take_profit_order = active_order
                 print(f"enter long take profit order = {enter_long_take_profit_order}")
             else:
+                check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
+                if check_for_partial["status"] == "PARTIALLY_FILLED":
+                    enter_long_take_profit_order = check_for_partial
                 check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
-                if check_for_cancel["status"] == "CANCELED":
+                if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
                     print("Already cancelled")
                 else:
                     cancel_stop_loss_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
@@ -861,7 +860,7 @@ try:
                 sell_cum_qty = float(enter_long_take_profit_order["cummulativeQuoteQty"])
                 TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
                 TOTAL_BUY_SPEND = float(enter_long_take_profit_order["cummulativeQuoteQty"])
-                TAKE_PROFIT_SELL_ORDER_PRICE = round((float(enter_long_take_profit_order["cummulativeQuoteQty"]) / float(enter_long_take_profit_order["executedQty"])),2)
+                TAKE_PROFIT_SELL_ORDER_PRICE = round((float(enter_long_take_profit_order["cummulativeQuoteQty"]) / float(enter_long_take_profit_order["executedQty"])),3)
                 TAKE_PROFIT_SELL_ORDER_ACTION = enter_long_take_profit_order["side"]
                 TAKE_PROFIT_SELL_ORDER_TYPE = enter_long_take_profit_order["type"]
                 sell_order_executed_time = datetime.now()
@@ -1008,14 +1007,18 @@ try:
                         active_order_status = active_order["status"]
                         if active_order_status == "FILLED":
                             break
-                    except:
+                    except Exception as e:
+                        print(e)
                         pass
                 if active_order_status == "FILLED":
                     enter_long_buy_order = active_order
                     print(f"enter long liit buy order = {enter_long_buy_order}")
                 else:
+                    check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_order_id)
+                    if check_for_partial["status"] == "PARTIALLY_FILLED":
+                        enter_long_buy_order = check_for_partial
                     check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_order_id)
-                    if check_for_cancel["status"] == "CANCELED":
+                    if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
                         print("Already cancelled")
                     else:
                         cancel_limit_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=limit_order_id)
@@ -1029,15 +1032,18 @@ try:
 
                 BUY_ORDER_ID = enter_long_buy_order["orderId"]
                 BUY_ORDER_SYMBOL = enter_long_buy_order["symbol"]
-                commision_in_coin = 0
-                for fill in enter_long_buy_order["fills"]:
-                    comm = float(fill["commission"])
-                    commision_in_coin += comm
                 ask_qty = float(enter_long_buy_order["executedQty"])
+                commision_in_coin = 0
+                try:
+                    for fill in enter_long_buy_order["fills"]:
+                        comm = float(fill["commission"])
+                        commision_in_coin += comm
+                except:
+                    commision_in_coin = ask_qty * 0.001
                 BUY_ORDER_QTY = ask_qty - commision_in_coin
                 TOTAL_BUY_SPEND = float(enter_long_buy_order["cummulativeQuoteQty"])
                 print(f"Total buy spend = {TOTAL_BUY_SPEND}")
-                BUY_ORDER_PRICE = float(enter_long_buy_order["cummulativeQuoteQty"]) / float(enter_long_buy_order["executedQty"])
+                BUY_ORDER_PRICE = round((float(enter_long_buy_order["cummulativeQuoteQty"]) / float(enter_long_buy_order["executedQty"])),3)
                 BUY_ORDER_ACTION = enter_long_buy_order["side"]
                 BUY_ORDER_TYPE = enter_long_buy_order["type"]
                 buy_order_executed_time = datetime.now()
@@ -1093,6 +1099,8 @@ try:
                         elif req_long_take_profit_percent > 0 and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
                             execute_limit_take_profit_order(SPOT_SIDE=SPOT_SIDE,req_position_type="Enter_long",BUY_ORDER_ID=BUY_ORDER_ID,SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SPOT_SELL_QUANTITY,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY,req_multi_tp=req_multi_tp,req_qty_size=0,req_order_time_out=req_order_time_out)
 
+                    print(f"BUY ORDER QTY = {BUY_ORDER_QTY}")
+                    print(f"SIZE={req_tp1_qty_size}")
                     if req_multi_tp == "Yes":
                         SELLABLE_1 = calculate_sell_qty_with_precision(SPOT_SYMBOL, (BUY_ORDER_QTY * req_tp1_qty_size))
                         print(f"Sellable qty_1 = {SELLABLE_1}")
@@ -1111,7 +1119,7 @@ try:
                         print(f"Take profit price final_2 = {TAKE_PROFIT_PRICE_FINAL_2}")
                         print(f"Take profit price final_3 = {TAKE_PROFIT_PRICE_FINAL_3}")
 
-                        if req_long_stop_loss_percent > 0 and req_long_take_profit_percent > 0:
+                        if req_long_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
                             if req_tp1_percent > 0:
                                 t1 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type="Enter_long",BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL, SPOT_ENTRY=SPOT_ENTRY,req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                                 t1.start()
@@ -1122,10 +1130,10 @@ try:
                                 t2 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type="Enter_long",BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_3,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_3,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL, SPOT_ENTRY=SPOT_ENTRY,req_multi_tp=req_multi_tp,req_qty_size=req_tp3_qty_size,req_order_time_out=req_order_time_out))
                                 t2.start()
 
-                        elif req_long_stop_loss_percent > 0 and (req_long_take_profit_percent == "" or req_long_take_profit_percent == 0):
+                        elif req_long_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
                             execute_limit_stop_loss_order(SPOT_SIDE=SPOT_SIDE,req_position_type="Enter_long",BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL, SPOT_SELL_QUANTITY=SPOT_SELL_QUANTITY, STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY,req_order_time_out=req_order_time_out)
 
-                        elif req_long_take_profit_percent > 0 and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
+                        elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
                             if req_tp1_percent > 0:
                                 t1 = threading.Thread(target=lambda: execute_limit_take_profit_order(SPOT_SIDE=SPOT_SIDE,req_position_type="Enter_long",BUY_ORDER_ID=BUY_ORDER_ID,SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,SPOT_ENTRY=SPOT_ENTRY,req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                                 t1.start()
@@ -1192,7 +1200,7 @@ try:
                     print(f"Take profit price final_2 = {TAKE_PROFIT_PRICE_FINAL_2}")
                     print(f"Take profit price final_3 = {TAKE_PROFIT_PRICE_FINAL_3}")
 
-                    if req_long_stop_loss_percent > 0 and req_long_take_profit_percent > 0:
+                    if req_long_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY, req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                             t1.start()
@@ -1203,10 +1211,10 @@ try:
                             t3 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_3,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_3,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY, req_multi_tp=req_multi_tp,req_qty_size=req_tp3_qty_size,req_order_time_out=req_order_time_out))
                             t3.start()
 
-                    elif req_long_stop_loss_percent > 0 and (req_long_take_profit_percent == "" or req_long_take_profit_percent == 0):
+                    elif req_long_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
                         execute_limit_stop_loss_order(SPOT_SIDE,req_position_type,BUY_ORDER_ID, SPOT_SYMBOL, SPOT_SELL_QUANTITY_EL, STOP_LOSS_PRICE_FINAL,SPOT_ENTRY,req_order_time_out)
 
-                    elif req_long_take_profit_percent > 0 and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
+                    elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_take_profit_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID,SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,SPOT_ENTRY=SPOT_ENTRY,req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                             t1.start()
@@ -1251,7 +1259,8 @@ try:
                                                                                quantity=SPOT_SELL_QUANTITY_EL)
                                     no_qty = False
                                     break
-                                except:
+                                except Exception as e:
+                                    print(e)
                                     pass
 
 
@@ -1263,7 +1272,7 @@ try:
                     sell_cum_qty = float(exit_long_sell_order["cummulativeQuoteQty"])
                     TOTAL_SELL_SPEND = (sell_cum_qty/100)*99.9
                     print(f"Total buy spend = {TOTAL_SELL_SPEND}")
-                    SELL_ORDER_PRICE = float(exit_long_sell_order["cummulativeQuoteQty"]) / float(exit_long_sell_order["executedQty"])
+                    SELL_ORDER_PRICE = round((float(exit_long_sell_order["cummulativeQuoteQty"]) / float(exit_long_sell_order["executedQty"])),3)
                     SELL_ORDER_ACTION = exit_long_sell_order["side"]
                     SELL_ORDER_TYPE = exit_long_sell_order["type"]
                     sell_order_executed_time = datetime.now()
@@ -1343,7 +1352,7 @@ try:
                     print(f"Take profit price final_2 = {TAKE_PROFIT_PRICE_FINAL_2}")
                     print(f"Take profit price final_3 = {TAKE_PROFIT_PRICE_FINAL_3}")
 
-                    if req_short_stop_loss_percent > 0 and req_short_take_profit_percent > 0:
+                    if req_long_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY, req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                             t1.start()
@@ -1354,10 +1363,11 @@ try:
                             t3 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_3,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_3,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY, req_multi_tp=req_multi_tp,req_qty_size=req_tp3_qty_size,req_order_time_out=req_order_time_out))
                             t3.start()
 
-                    elif req_short_stop_loss_percent > 0 and (req_short_take_profit_percent == "" or req_short_take_profit_percent == 0):
+                    elif req_long_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
                         execute_limit_stop_loss_order(SPOT_SIDE,req_position_type,BUY_ORDER_ID, SPOT_SYMBOL, SPOT_SELL_QUANTITY_EL, STOP_LOSS_PRICE_FINAL,SPOT_ENTRY,req_order_time_out)
 
-                    elif req_short_take_profit_percent > 0 and (req_short_stop_loss_percent == "" or req_short_stop_loss_percent == 0):
+
+                    elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_take_profit_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID,SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,SPOT_ENTRY=SPOT_ENTRY,req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                             t1.start()
@@ -1393,7 +1403,7 @@ try:
                     SELL_ORDER_QTY = float(exit_long_sell_order["executedQty"])
                     TOTAL_SELL_SPEND = float(exit_long_sell_order["cummulativeQuoteQty"])
                     print(f"Total buy spend = {TOTAL_SELL_SPEND}")
-                    SELL_ORDER_PRICE = float(exit_long_sell_order["cummulativeQuoteQty"]) / float(exit_long_sell_order["executedQty"])
+                    SELL_ORDER_PRICE = round((float(exit_long_sell_order["cummulativeQuoteQty"]) / float(exit_long_sell_order["executedQty"])),3)
                     SELL_ORDER_ACTION = exit_long_sell_order["side"]
                     SELL_ORDER_TYPE = exit_long_sell_order["type"]
                     sell_order_executed_time = datetime.now()
@@ -1439,10 +1449,13 @@ try:
                     BUY_ORDER_ID = exit_short_buy_order["orderId"]
                     BUY_ORDER_SYMBOL = exit_short_buy_order["symbol"]
                     commision_in_coin = 0
-                    for fill in exit_short_buy_order["fills"]:
-                        comm = float(fill["commission"])
-                        commision_in_coin += comm
                     ask_qty = float(exit_short_buy_order["executedQty"])
+                    try:
+                        for fill in exit_short_buy_order["fills"]:
+                            comm = float(fill["commission"])
+                            commision_in_coin += comm
+                    except:
+                        commision_in_coin = ask_qty * 0.001
                     BUY_ORDER_QTY = ask_qty - commision_in_coin
                     TOTAL_BUY_SPEND = float(exit_short_buy_order["cummulativeQuoteQty"])
                     print(f"Total buy spend = {TOTAL_BUY_SPEND}")
@@ -1541,7 +1554,7 @@ try:
                     print(f"Take profit price final_2 = {TAKE_PROFIT_PRICE_FINAL_2}")
                     print(f"Take profit price final_3 = {TAKE_PROFIT_PRICE_FINAL_3}")
 
-                    if req_short_stop_loss_percent > 0 and req_short_take_profit_percent > 0:
+                    if req_long_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,
                                                                                          BUY_ORDER_ID=BUY_ORDER_ID,
@@ -1576,13 +1589,13 @@ try:
                                                                                          req_qty_size=req_tp3_qty_size,req_order_time_out=req_order_time_out))
                             t3.start()
 
-                    elif req_short_stop_loss_percent > 0 and (
-                            req_short_take_profit_percent == "" or req_short_take_profit_percent == 0):
+
+                    elif req_long_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
                         execute_limit_stop_loss_order(SPOT_SIDE,req_position_type, BUY_ORDER_ID, SPOT_SYMBOL, SPOT_BUY_QUANTITY_EL,
                                                       STOP_LOSS_PRICE_FINAL, SPOT_ENTRY,req_order_time_out)
 
-                    elif req_short_take_profit_percent > 0 and (
-                            req_short_stop_loss_percent == "" or req_short_stop_loss_percent == 0):
+
+                    elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(
                                 target=lambda: execute_limit_take_profit_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,
@@ -1617,13 +1630,12 @@ try:
 
         # Stop bot if balance is below user defined amount
 
-        if len(req_stop_bot_balance) > 0 and req_stop_bot_balance != "0":
+        if req_stop_bot_balance != 0:
             if check_base_coin_balance() > req_stop_bot_balance:
                 # Check order position
                 if req_position_type == "Enter_long":
                     SPOT_BUY_QUANTITY = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
                     proceed_enter_long(SPOT_BUY_QUANTITY,SPOT_SYMBOL,SPOT_ENTRY,req_long_stop_loss_percent,req_long_take_profit_percent,req_multi_tp,req_tp1_percent,req_tp2_percent,req_tp3_percent,req_tp1_qty_size,req_tp2_qty_size,req_tp3_qty_size,req_order_time_out)
-
 
                 elif req_position_type == "Exit_short":
                     SPOT_BUY_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
@@ -1634,7 +1646,7 @@ try:
 
                 elif req_position_type == "Exit_long":
                     SPOT_SELL_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
-                    proceed_exit_long(req_position_type,SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, SPOT_ENTRY, req_long_stop_loss_percent,
+                    proceed_exit_long(req_position_type,SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, req_long_stop_loss_percent,
                                        req_long_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
                                        req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
                                        req_order_time_out)
@@ -1646,26 +1658,17 @@ try:
                      req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size, req_order_time_out)
 
         else:
-            SPOT_SYMBOL = "NA"
-            SPOT_SIDE = "NA"
-            JSON_ENTRY = "NA"
-            JSON_EXIT = "NA"
-            SPOT_QUANTITY = "NA"
             error_occured_time = datetime.now()
             error_occured = "Cant initiate the trade! Wallet balance is low!"
-            cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+            cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",[error_occured_time, error_occured])
             conn.commit()
-except:
-    SPOT_SYMBOL = "NA"
-    SPOT_SIDE = "NA"
-    JSON_ENTRY = "NA"
-    JSON_EXIT = "NA"
-    SPOT_QUANTITY = "NA"
+except Exception as e:
+    print(e)
     error_occured_time = datetime.now()
     error_occured = "Error in initiating Spot Order!"
     cursor.execute(
-        "insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
-        [SPOT_SYMBOL, SPOT_SIDE, JSON_ENTRY, JSON_EXIT, SPOT_QUANTITY, error_occured_time, error_occured])
+        "insert into error_log(occured_time, error_description) values (%s, %s)",
+        [error_occured_time, error_occured])
     conn.commit()
 
 
@@ -2005,8 +2008,11 @@ if req_trade_type == "Futures":
             postioned_order = client.futures_get_order(symbol=FUTURES_SYMBOL, orderId=order_id)
             print(f"postioned futures order = {postioned_order}")
         else:
+            check_for_partial = client.futures_get_order(symbol=FUTURES_SYMBOL, orderId=order_id)
+            if check_for_partial["status"] == "PARTIALLY_FILLED":
+                postioned_order = check_for_partial
             check_for_cancel = client.futures_get_order(symbol=FUTURES_SYMBOL, orderId=order_id)
-            if check_for_cancel["status"] == "CANCELED":
+            if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
                 print("Already cancelled")
             else:
                 cancel_futures_limit_order = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=order_id)
@@ -2449,7 +2455,7 @@ if req_trade_type == "Futures":
             FUTURES_QUANTITY = futures_calculate_buy_qty_with_precision(FUTURES_SYMBOL, qty_in_base_coin)
 
             # Stop bot if balance is below user defined amount
-            if len(req_stop_bot_balance) > 0 and req_stop_bot_balance != "0":
+            if req_stop_bot_balance != 0:
                 if futures_balance_in_selected_base_coin < req_stop_bot_balance:
                     FUTURES_SYMBOL = FUTURES_SYMBOL
                     F_SIDE = side
@@ -2478,16 +2484,11 @@ if req_trade_type == "Futures":
             exit_order(side, FUTURES_SYMBOL, FUTURES_EXIT, req_order_time_out)
 
     except:
-        FUTURES_SYMBOL = "NA"
-        F_SIDE = "NA"
-        JSON_ENTRY = "NA"
-        JSON_EXIT = "NA"
-        QUANTITY = "NA"
         error_occured_time = datetime.now()
         error_occured = "Error in Initiating Futures Order!"
         cursor.execute(
-            "insert into futures_e_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s)",
-            [FUTURES_SYMBOL, F_SIDE, JSON_ENTRY, JSON_ENTRY, QUANTITY, error_occured_time, error_occured])
+            "insert into futures_e_log(occured_time, error_description) values (%s, %s)",
+            [error_occured_time, error_occured])
         conn.commit()
 
 
