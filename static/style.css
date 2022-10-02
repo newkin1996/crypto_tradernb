@@ -41,7 +41,7 @@ button {
 }
 
 .charts {
-    display: grid;
+    display: block;
     grid-template-columns: 2fr 1fr;
     grid-gap: 20px;
     width: 100%;
