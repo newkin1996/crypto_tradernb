@@ -784,6 +784,10 @@ def process_alert():
     req_exchange = alert_response["exchange"]
     print(f"req exchange = {req_exchange}")
 
+    success_message = "Success"
+
+    return success_message
+
 
 
 if __name__ == "__main__":
