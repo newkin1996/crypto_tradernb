@@ -770,9 +770,9 @@ def get_futures():
 def process_alert():
     print("Webhook triggered")
     print(request)
-    alert_response = request.get_data(as_text=True)
+    alert = request.get_data(as_text=True)
 
-    alert_res = json.loads(json.dumps(alert_response))
+    alert_res = json.loads(json.dumps(alert))
     alert_response = json.loads(alert_res)
     print(f"first method worked = {alert_response}")
 
