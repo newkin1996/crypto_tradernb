@@ -40,18 +40,18 @@ alert_response = {"exchange":"Binance",
  "trade_type": "Spot",
  "long_stop_loss_percent":0,
  "long_take_profit_percent":0,
- "short_stop_loss_percent":0.5,
+ "short_stop_loss_percent":0,
  "short_take_profit_percent":0,
- "enable_multi_tp":"Yes",
- "tp_1_pos_size":50,
- "tp1_percent":0.2,
- "tp_2_pos_size":50,
- "tp2_percent":0.22,
+ "enable_multi_tp":"No",
+ "tp_1_pos_size":0,
+ "tp1_percent":0,
+ "tp_2_pos_size":0,
+ "tp2_percent":0,
  "tp_3_pos_size":0,
  "tp3_percent":0,
  "stop_bot_below_balance":1,
  "order_time_out":120,
- "position_type": "Enter_short"}
+ "position_type": "Exit_short"}
 
 try:
     try:
@@ -250,8 +250,8 @@ try:
             print(SPOT_SIDE)
 
             # STOP_LOSS_PRICE_FINAL_S = cal_price_with_precision(SPOT_SYMBOL=SPOT_SYMBOL,input_price=(STOP_LOSS_PRICE_FINAL * 0.9999))
-            # STOP_LOSS_PRICE_FINAL_B = cal_price_with_precision(SPOT_SYMBOL=SPOT_SYMBOL,
-            #                                                    input_price=(STOP_LOSS_PRICE_FINAL * 1.0009))
+            STOP_LOSS_PRICE_FINAL_B = cal_price_with_precision(SPOT_SYMBOL=SPOT_SYMBOL,
+                                                               input_price=(STOP_LOSS_PRICE_FINAL * 1.0009))
 
             try:
                 if SPOT_SIDE == "SELL":
@@ -273,7 +273,7 @@ try:
                     print(f"limit oco order = {limit_oco_order}")
                 if SPOT_SIDE == "BUY":
                     limit_oco_order = client.order_oco_buy(symbol=SPOT_SYMBOL, quantity=SPOT_SELL_QUANTITY,
-                                                            price=TAKE_PROFIT_PRICE_FINAL, stopPrice=STOP_LOSS_PRICE_FINAL,
+                                                            price=TAKE_PROFIT_PRICE_FINAL, stopPrice=STOP_LOSS_PRICE_FINAL_B,
                                                             stopLimitPrice=STOP_LOSS_PRICE_FINAL, stopLimitTimeInForce="GTC")
                     print(f"limit oco order = {limit_oco_order}")
 
@@ -332,7 +332,7 @@ try:
                                 if SPOT_SIDE == "BUY":
                                     limit_oco_order = client.order_oco_buy(symbol=SPOT_SYMBOL, quantity=SPOT_SELL_QUANTITY,
                                                                            price=TAKE_PROFIT_PRICE_FINAL,
-                                                                           stopPrice=STOP_LOSS_PRICE_FINAL,
+                                                                           stopPrice=STOP_LOSS_PRICE_FINAL_B,
                                                                            stopLimitPrice=STOP_LOSS_PRICE_FINAL,
                                                                            stopLimitTimeInForce="GTC")
                                     print(f"limit oco order = {limit_oco_order}")
@@ -1441,7 +1441,7 @@ try:
             if req_short_stop_loss_percent == 0 and req_short_take_profit_percent == 0 and req_multi_tp == "No":
                 SPOT_ENTRY = "MARKET"
                 try:
-                    exit_short_buy_order = client.create_order(symbol=SPOT_SYMBOL, side=SPOT_SIDE, type=SPOT_ENTRY,quantity=SPOT_BUY_QUANTITY)
+                    exit_short_buy_order = client.create_order(symbol=SPOT_SYMBOL, side=SPOT_SIDE, type=SPOT_ENTRY,quantity=SPOT_BUY_QUANTITY_EL)
                     time.sleep(5)
                     print(f"exit_short_buy_order = {exit_short_buy_order}")
                 except Exception as e:
@@ -1474,13 +1474,13 @@ try:
                     r_3 = cursor.fetchall()
                     price_results = r_3[0][0]
                     previous_short_entry_income = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_income}")
+                    print(f"previous_buy_income = {previous_short_entry_income}")
 
                     cursor.execute("select qty from short_entry where symbol = %s", [SPOT_SYMBOL])
                     r_3 = cursor.fetchall()
                     price_results = r_3[0][0]
                     previous_short_entry_qty = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_qty}")
+                    print(f"previous_short_entry_qty = {previous_short_entry_qty}")
 
                     actual_sell_income = (previous_short_entry_income/100)*99.9
                     proportional_sell_income = (actual_sell_income/previous_short_entry_qty) * BUY_ORDER_QTY
