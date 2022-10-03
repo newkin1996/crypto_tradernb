@@ -772,7 +772,8 @@ def process_alert():
     print(request)
     alert_response = request.get_data(as_text=True)
 
-    alert_response = json.loads(alert_response)
+    alert_res = json.loads(json.dumps(alert_response))
+    alert_response = json.loads(alert_res)
     print(f"first method worked = {alert_response}")
 
     print(f"type = {type(alert_response)}")
