@@ -772,7 +772,7 @@ def process_alert():
     print(request)
     alert_response = request.get_data(as_text=True)
 
-    alert_response = json.loads(json.dumps(alert_response))
+    alert_response = json.loads(alert_response)
     print(f"first method worked = {alert_response}")
 
     print(f"type = {type(alert_response)}")
@@ -780,7 +780,7 @@ def process_alert():
     # with open("alerts.txt", mode="w") as alerts_file:
     #     alerts_file.write(f"response = {request}, content = {alert_response}")
     #
-    req_exchange = alert_response[0]["exchange"]
+    req_exchange = alert_response["exchange"]
     print(f"req exchange = {req_exchange}")
 
 
