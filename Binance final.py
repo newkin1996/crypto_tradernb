@@ -29,29 +29,29 @@ print("Connection established to: ",data)
 
 alert_response = {"exchange":"Binance",
  "base_coin":"USDT",
- "coin_pair": "SANTOSUSDT",
+ "coin_pair": "XVSUSDT",
  "entry_type":"Market",
  "exit_type":"Limit",
-  "long_leverage": 2,
-  "short_leverage": 2,
+ "long_leverage": 2,
+ "short_leverage": 2,
  "margin_mode":"Isolated",
  "qty_type": "Fixed",
- "qty": 18,
+ "qty": 21,
  "trade_type": "Spot",
- "long_stop_loss_percent":0.2,
+ "long_stop_loss_percent":0,
  "long_take_profit_percent":0,
- "short_stop_loss_percent":0,
+ "short_stop_loss_percent":0.5,
  "short_take_profit_percent":0,
  "enable_multi_tp":"Yes",
- "tp_1_pos_size":80,
- "tp1_percent":0.7,
- "tp_2_pos_size":0,
- "tp2_percent":0,
+ "tp_1_pos_size":50,
+ "tp1_percent":0.2,
+ "tp_2_pos_size":50,
+ "tp2_percent":0.22,
  "tp_3_pos_size":0,
  "tp3_percent":0,
- "stop_bot_below_balance":5,
+ "stop_bot_below_balance":1,
  "order_time_out":120,
- "position_type": "Enter_long"}
+ "position_type": "Enter_short"}
 
 try:
     try:
@@ -126,6 +126,7 @@ try:
     req_long_take_profit_percent = (float(alert_response["long_take_profit_percent"]))/100
     req_short_stop_loss_percent = (float(alert_response["short_stop_loss_percent"]))/100
     req_short_take_profit_percent = (float(alert_response["short_take_profit_percent"]))/100
+    print(f"req short tp = {req_short_take_profit_percent}")
     req_multi_tp = alert_response["enable_multi_tp"]
 
     req_tp1_qty_size = (float(alert_response["tp_1_pos_size"]))/100
@@ -364,146 +365,146 @@ try:
 
             print(oco_order_ids)
 
-            # Loop and check if entry order is filled
-            entry_order_timeout_start = time.time()
-
-            print("Came here")
-            while time.time() < (entry_order_timeout_start + req_order_time_out):
-                try:
-                    for order_id in oco_order_ids:
-                        active_order = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
-                        active_order_status = active_order["status"]
+            def add_to_trade_oco():
+                while True:
+                    time.sleep(4)
+                    try:
+                        for order_id in oco_order_ids:
+                            active_order = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
+                            active_order_status = active_order["status"]
+                            if active_order_status == "FILLED":
+                                print("Filled")
+                                break
                         if active_order_status == "FILLED":
-                            print("Filled")
                             break
-                    if active_order_status == "FILLED":
-                        break
+                    except Exception as e:
+                        print(e)
+                        pass
+                if active_order_status == "FILLED":
+                    oco_limit_sell_order = active_order
+                    print(f"oco limit sell order = {oco_limit_sell_order}")
+                else:
+                    for order_id in oco_order_ids:
+                        check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
+                        if check_for_partial["status"] == "PARTIALLY_FILLED":
+                            oco_limit_sell_order = check_for_partial
+                        check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
+                        if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
+                            print("Already cancelled")
+                        else:
+                            cancel_oco_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=order_id)
+                        error_occured = "Order time limit reached! Pending open oco sell orders have been cancelled"
+                        print(error_occured)
+                        error_occured_time = datetime.now()
+                        cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, SPOT_ENTRY, SPOT_EXIT, SPOT_SELL_QUANTITY, error_occured_time, error_occured])
+                        conn.commit()
+
+                try:
+                    OCO_SELL_ORDER_ID = oco_limit_sell_order["orderId"]
+                    OCO_SELL_ORDER_SYMBOL = oco_limit_sell_order["symbol"]
+                    OCO_SELL_ORDER_QTY = float(oco_limit_sell_order["executedQty"])
+                    sell_cum_qty = float(oco_limit_sell_order["cummulativeQuoteQty"])
+                    TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
+                    TOTAL_BUY_SPEND = float(oco_limit_sell_order["cummulativeQuoteQty"])
+                    OCO_SELL_ORDER_PRICE = round((float(oco_limit_sell_order["cummulativeQuoteQty"]) / float(oco_limit_sell_order["executedQty"])),3)
+                    OCO_SELL_ORDER_ACTION = oco_limit_sell_order["side"]
+                    OCO_SELL_ORDER_TYPE = oco_limit_sell_order["type"]
+                    sell_order_executed_time = datetime.now()
+
+                    if req_position_type == "Enter_long":
+                        cursor.execute("select total_spend from id_list where order_id = %s", [BUY_ORDER_ID])
+                        r_2 = cursor.fetchall()
+                        price_results = r_2[0][0]
+                        total_buy_spend = float(price_results)
+                        print(f"Total buy spend from DB= {total_buy_spend}")
+
+                        if req_multi_tp == "No":
+                            OCO_SELL_PNL = round((TOTAL_SELL_SPEND - total_buy_spend),2)
+                            oco_sell_per = (OCO_SELL_PNL / total_buy_spend) * 100
+                            OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
+                        if req_multi_tp == "Yes":
+                            buy_spend_per = float(total_buy_spend)*float(req_qty_size)
+                            OCO_SELL_PNL = round((TOTAL_SELL_SPEND - buy_spend_per), 2)
+                            oco_sell_per = (OCO_SELL_PNL / buy_spend_per) * 100
+                            OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY, OCO_SELL_PNL,OCO_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
+                    if req_position_type == "Exit_long":
+                        cursor.execute("select qty from long_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_long_entry_qty = float(price_results)
+                        print(f"previous_long_entry_qty = {previous_long_entry_qty}")
+
+                        cursor.execute("select total_spend from long_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_long_entry_spend = float(price_results)
+                        print(f"previous_long_entry_spend = {previous_long_entry_spend}")
+
+                        proportional_buy_spend = (previous_long_entry_spend / previous_long_entry_qty) * OCO_SELL_ORDER_QTY
+                        OCO_SELL_PNL = round((TOTAL_SELL_SPEND - proportional_buy_spend), 2)
+                        oco_sell_per = (OCO_SELL_PNL / proportional_buy_spend) * 100
+                        OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY, OCO_SELL_PNL,OCO_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
+                    if req_position_type == "Enter_short":
+
+                        cursor.execute("select exists (select 1 from short_entry)")
+                        r_1 = cursor.fetchall()
+                        live_r = r_1[0][0]
+
+                        if live_r == False:
+                            cursor.execute(sql.SQL("insert into short_entry(order_id, entry_price, total_spend, symbol, qty) values (%s, %s, %s, %s, %s)"),
+                                           [OCO_SELL_ORDER_ID, OCO_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_QTY])
+                            conn.commit()
+                        if live_r == True:
+                            cursor.execute(
+                                "update short_entry set order_id = %s, entry_price = %s, total_spend = %s, symbol = %s, qty = %s",
+                                [OCO_SELL_ORDER_ID, OCO_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_QTY])
+                            conn.commit()
+                            print("Records inserted")
+
+                        cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty) values (%s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY])
+                        conn.commit()
+
+                    if req_position_type == "Exit_short":
+
+                        cursor.execute("select total_spend from short_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_short_entry_income = float(price_results)
+                        print(f"previous_short_entry_price = {previous_short_entry_income}")
+
+                        cursor.execute("select qty from short_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_short_entry_qty = float(price_results)
+                        print(f"previous_short_entry_price = {previous_short_entry_qty}")
+
+                        actual_sell_income = (previous_short_entry_income / 100) * 99.9
+                        proportional_sell_income = (actual_sell_income / previous_short_entry_qty) * OCO_SELL_ORDER_QTY
+                        OCO_SELL_PNL = round((proportional_sell_income - TOTAL_BUY_SPEND), 2)
+                        oco_sell_per = (OCO_SELL_PNL / proportional_sell_income) * 100
+                        OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL(
+                            "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
+                                       [sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,
+                                        OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY, OCO_SELL_PNL,
+                                        OCO_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
+
                 except Exception as e:
                     print(e)
-                    pass
-            if active_order_status == "FILLED":
-                oco_limit_sell_order = active_order
-                print(f"oco limit sell order = {oco_limit_sell_order}")
-            else:
-                for order_id in oco_order_ids:
-                    check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
-                    if check_for_partial["status"] == "PARTIALLY_FILLED":
-                        oco_limit_sell_order = check_for_partial
-                    check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=order_id)
-                    if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
-                        print("Already cancelled")
-                    else:
-                        cancel_oco_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=order_id)
-                    error_occured = "Order time limit reached! Pending open oco sell orders have been cancelled"
-                    print(error_occured)
-                    error_occured_time = datetime.now()
-                    cursor.execute("insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",[SPOT_SYMBOL, SPOT_SIDE, SPOT_ENTRY, SPOT_EXIT, SPOT_SELL_QUANTITY, error_occured_time, error_occured])
-                    conn.commit()
 
-            try:
-                OCO_SELL_ORDER_ID = oco_limit_sell_order["orderId"]
-                OCO_SELL_ORDER_SYMBOL = oco_limit_sell_order["symbol"]
-                OCO_SELL_ORDER_QTY = float(oco_limit_sell_order["executedQty"])
-                sell_cum_qty = float(oco_limit_sell_order["cummulativeQuoteQty"])
-                TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
-                TOTAL_BUY_SPEND = float(oco_limit_sell_order["cummulativeQuoteQty"])
-                OCO_SELL_ORDER_PRICE = round((float(oco_limit_sell_order["cummulativeQuoteQty"]) / float(oco_limit_sell_order["executedQty"])),3)
-                OCO_SELL_ORDER_ACTION = oco_limit_sell_order["side"]
-                OCO_SELL_ORDER_TYPE = oco_limit_sell_order["type"]
-                sell_order_executed_time = datetime.now()
-
-                if req_position_type == "Enter_long":
-                    cursor.execute("select total_spend from id_list where order_id = %s", [BUY_ORDER_ID])
-                    r_2 = cursor.fetchall()
-                    price_results = r_2[0][0]
-                    total_buy_spend = float(price_results)
-                    print(f"Total buy spend from DB= {total_buy_spend}")
-
-                    if req_multi_tp == "No":
-                        OCO_SELL_PNL = round((TOTAL_SELL_SPEND - total_buy_spend),2)
-                        oco_sell_per = (OCO_SELL_PNL / total_buy_spend) * 100
-                        OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
-                    if req_multi_tp == "Yes":
-                        buy_spend_per = float(total_buy_spend)*float(req_qty_size)
-                        OCO_SELL_PNL = round((TOTAL_SELL_SPEND - buy_spend_per), 2)
-                        oco_sell_per = (OCO_SELL_PNL / buy_spend_per) * 100
-                        OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY, OCO_SELL_PNL,OCO_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-                if req_position_type == "Exit_long":
-                    cursor.execute("select qty from long_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_long_entry_qty = float(price_results)
-                    print(f"previous_long_entry_qty = {previous_long_entry_qty}")
-
-                    cursor.execute("select total_spend from long_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_long_entry_spend = float(price_results)
-                    print(f"previous_long_entry_spend = {previous_long_entry_spend}")
-
-                    proportional_buy_spend = (previous_long_entry_spend / previous_long_entry_qty) * OCO_SELL_ORDER_QTY
-                    OCO_SELL_PNL = round((TOTAL_SELL_SPEND - proportional_buy_spend), 2)
-                    oco_sell_per = (OCO_SELL_PNL / proportional_buy_spend) * 100
-                    OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY, OCO_SELL_PNL,OCO_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-                if req_position_type == "Enter_short":
-
-                    cursor.execute("select exists (select 1 from short_entry)")
-                    r_1 = cursor.fetchall()
-                    live_r = r_1[0][0]
-
-                    if live_r == False:
-                        cursor.execute(sql.SQL("insert into short_entry(order_id, entry_price, total_spend, symbol, qty) values (%s, %s, %s, %s, %s)"),
-                                       [OCO_SELL_ORDER_ID, OCO_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_QTY])
-                        conn.commit()
-                    if live_r == True:
-                        cursor.execute(
-                            "update short_entry set order_id = %s, entry_price = %s, total_spend = %s, symbol = %s, qty = %s",
-                            [OCO_SELL_ORDER_ID, OCO_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_QTY])
-                        conn.commit()
-                        print("Records inserted")
-
-                    cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty) values (%s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY])
-                    conn.commit()
-
-                if req_position_type == "Exit_short":
-
-                    cursor.execute("select total_spend from short_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_short_entry_income = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_income}")
-
-                    cursor.execute("select qty from short_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_short_entry_qty = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_qty}")
-
-                    actual_sell_income = (previous_short_entry_income / 100) * 99.9
-                    proportional_sell_income = (actual_sell_income / previous_short_entry_qty) * OCO_SELL_ORDER_QTY
-                    OCO_SELL_PNL = round((proportional_sell_income - TOTAL_BUY_SPEND), 2)
-                    oco_sell_per = (OCO_SELL_PNL / proportional_sell_income) * 100
-                    OCO_SELL_PNL_PERCENTAGE = str((round(oco_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL(
-                        "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
-                                   [sell_order_executed_time, OCO_SELL_ORDER_SYMBOL, OCO_SELL_ORDER_ID, OCO_SELL_ORDER_ACTION,
-                                    OCO_SELL_ORDER_TYPE, OCO_SELL_ORDER_PRICE, OCO_SELL_ORDER_QTY, OCO_SELL_PNL,
-                                    OCO_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-
-            except Exception as e:
-                print(e)
-
+            t22 = threading.Thread(target=add_to_trade_oco)
+            t22.start()
 
         def execute_limit_stop_loss_order(SPOT_SIDE,req_position_type,BUY_ORDER_ID, SPOT_SYMBOL, SPOT_SELL_QUANTITY, STOP_LOSS_PRICE_FINAL, SPOT_ENTRY,req_order_time_out):
             print(SPOT_SIDE)
@@ -595,141 +596,143 @@ try:
             limit_stop_loss_order_ID = limit_stop_loss_order["orderId"]
             print(limit_stop_loss_order_ID)
 
-            # Loop and check if entry order is filled
-            entry_order_timeout_start = time.time()
+            def add_to_trade_sl():
 
-            while time.time() < (entry_order_timeout_start + req_order_time_out):
+                while True:
+                    time.sleep(4)
+                    try:
+                        active_order = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
+                        active_order_status = active_order["status"]
+                        if active_order_status == "FILLED":
+                            break
+                    except Exception as e:
+                        print(e)
+                        pass
+                if active_order_status == "FILLED":
+                    enter_long_sell_stop_loss_order = active_order
+                    print(f"enter long sell stop loss order={enter_long_sell_stop_loss_order}")
+                else:
+                    check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
+                    if check_for_partial["status"] == "PARTIALLY_FILLED":
+                        enter_long_sell_stop_loss_order = check_for_partial
+                    check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
+                    if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
+                        print("Already cancelled")
+                    else:
+                        cancel_stop_loss_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
+                    error_occured = "Order time limit reached! Pending open oco sell orders have been cancelled"
+                    print(error_occured)
+                    error_occured_time = datetime.now()
+                    cursor.execute(
+                        "insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
+                        [SPOT_SYMBOL, SPOT_SIDE, SPOT_ENTRY, SPOT_EXIT, SPOT_SELL_QUANTITY, error_occured_time, error_occured])
+                    conn.commit()
                 try:
-                    active_order = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
-                    active_order_status = active_order["status"]
-                    if active_order_status == "FILLED":
-                        break
+                    STOP_LOSS_SELL_ORDER_ID = enter_long_sell_stop_loss_order["orderId"]
+                    STOP_LOSS_SELL_ORDER_SYMBOL = enter_long_sell_stop_loss_order["symbol"]
+                    STOP_LOSS_SELL_ORDER_QTY = float(enter_long_sell_stop_loss_order["executedQty"])
+                    sell_cum_qty = float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"])
+                    TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
+                    TOTAL_BUY_SPEND = float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"])
+                    STOP_LOSS_SELL_ORDER_PRICE = round((float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"]) / float(enter_long_sell_stop_loss_order["executedQty"])),3)
+                    STOP_LOSS_SELL_ORDER_ACTION = enter_long_sell_stop_loss_order["side"]
+                    STOP_LOSS_SELL_ORDER_TYPE = enter_long_sell_stop_loss_order["type"]
+                    sell_order_executed_time = datetime.now()
+
+                    if req_position_type == "Enter_long":
+                        cursor.execute("select total_spend from id_list where order_id = %s", [BUY_ORDER_ID])
+                        r_2 = cursor.fetchall()
+                        price_results = r_2[0][0]
+                        total_buy_spend = float(price_results)
+
+                        STOP_LOSS_SELL_PNL = round((TOTAL_SELL_SPEND - total_buy_spend), 2)
+                        stop_loss_sell_per = (STOP_LOSS_SELL_PNL / total_buy_spend) * 100
+                        STOP_LOSS_SELL_PNL_PERCENTAGE = str((round(stop_loss_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL(
+                            "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
+                                       [sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,
+                                        STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,
+                                        STOP_LOSS_SELL_ORDER_QTY, STOP_LOSS_SELL_PNL, STOP_LOSS_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
+                    if req_position_type == "Exit_long":
+                        cursor.execute("select qty from long_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_long_entry_qty = float(price_results)
+                        print(f"previous_long_entry_qty = {previous_long_entry_qty}")
+
+                        cursor.execute("select total_spend from long_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_long_entry_spend = float(price_results)
+                        print(f"previous_long_entry_spend = {previous_long_entry_spend}")
+
+                        proportional_buy_spend = (previous_long_entry_spend / previous_long_entry_qty) * STOP_LOSS_SELL_ORDER_QTY
+                        STOP_LOSS_SELL_PNL = round((TOTAL_SELL_SPEND - proportional_buy_spend), 2)
+                        sl_sell_per = (STOP_LOSS_SELL_PNL / proportional_buy_spend) * 100
+                        STOP_LOSS_SELL_PNL_PERCENTAGE = str((round(sl_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,STOP_LOSS_SELL_ORDER_QTY, STOP_LOSS_SELL_PNL, STOP_LOSS_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
+                    if req_position_type == "Enter_short":
+
+                        cursor.execute("select exists (select 1 from short_entry)")
+                        r_1 = cursor.fetchall()
+                        live_r = r_1[0][0]
+
+                        if live_r == False:
+                            cursor.execute(sql.SQL(
+                                "insert into short_entry(order_id, entry_price, total_spend, symbol, qty) values (%s, %s, %s, %s, %s)"),
+                                           [STOP_LOSS_SELL_ORDER_ID, STOP_LOSS_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, STOP_LOSS_SELL_ORDER_SYMBOL,STOP_LOSS_SELL_ORDER_QTY])
+                            conn.commit()
+                        if live_r == True:
+                            cursor.execute(
+                                "update short_entry set order_id = %s, entry_price = %s, total_spend = %s, symbol = %s, qty = %s",
+                                [STOP_LOSS_SELL_ORDER_ID, STOP_LOSS_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, STOP_LOSS_SELL_ORDER_SYMBOL,STOP_LOSS_SELL_ORDER_QTY])
+                            conn.commit()
+                            print("Records inserted")
+
+                        cursor.execute(sql.SQL(
+                            "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty) values (%s, %s, %s, %s, %s, %s, %s)"),
+                                       [sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,
+                                        STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,
+                                        STOP_LOSS_SELL_ORDER_QTY])
+                        conn.commit()
+
+                    if req_position_type == "Exit_short":
+                        cursor.execute("select total_spend from short_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_short_entry_income = float(price_results)
+                        print(f"previous_short_entry_price = {previous_short_entry_income}")
+
+                        cursor.execute("select qty from short_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_short_entry_qty = float(price_results)
+                        print(f"previous_short_entry_price = {previous_short_entry_qty}")
+
+                        actual_sell_income = (previous_short_entry_income / 100) * 99.9
+                        proportional_sell_income = (actual_sell_income / previous_short_entry_qty) * STOP_LOSS_SELL_ORDER_QTY
+                        STOP_LOSS_SELL_PNL = round((proportional_sell_income - TOTAL_BUY_SPEND), 2)
+                        sl_sell_per = (STOP_LOSS_SELL_PNL / proportional_sell_income) * 100
+                        STOP_LOSS_SELL_PNL_PERCENTAGE = str((round(sl_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL(
+                            "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
+                            [sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,
+                             STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,
+                             STOP_LOSS_SELL_ORDER_QTY, STOP_LOSS_SELL_PNL, STOP_LOSS_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
                 except Exception as e:
                     print(e)
-                    pass
-            if active_order_status == "FILLED":
-                enter_long_sell_stop_loss_order = active_order
-                print(f"enter long sell stop loss order={enter_long_sell_stop_loss_order}")
-            else:
-                check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
-                if check_for_partial["status"] == "PARTIALLY_FILLED":
-                    enter_long_sell_stop_loss_order = check_for_partial
-                check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
-                if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
-                    print("Already cancelled")
-                else:
-                    cancel_stop_loss_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=limit_stop_loss_order_ID)
-                error_occured = "Order time limit reached! Pending open oco sell orders have been cancelled"
-                print(error_occured)
-                error_occured_time = datetime.now()
-                cursor.execute(
-                    "insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
-                    [SPOT_SYMBOL, SPOT_SIDE, SPOT_ENTRY, SPOT_EXIT, SPOT_SELL_QUANTITY, error_occured_time, error_occured])
-                conn.commit()
-            try:
-                STOP_LOSS_SELL_ORDER_ID = enter_long_sell_stop_loss_order["orderId"]
-                STOP_LOSS_SELL_ORDER_SYMBOL = enter_long_sell_stop_loss_order["symbol"]
-                STOP_LOSS_SELL_ORDER_QTY = float(enter_long_sell_stop_loss_order["executedQty"])
-                sell_cum_qty = float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"])
-                TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
-                TOTAL_BUY_SPEND = float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"])
-                STOP_LOSS_SELL_ORDER_PRICE = round((float(enter_long_sell_stop_loss_order["cummulativeQuoteQty"]) / float(enter_long_sell_stop_loss_order["executedQty"])),3)
-                STOP_LOSS_SELL_ORDER_ACTION = enter_long_sell_stop_loss_order["side"]
-                STOP_LOSS_SELL_ORDER_TYPE = enter_long_sell_stop_loss_order["type"]
-                sell_order_executed_time = datetime.now()
 
-                if req_position_type == "Enter_long":
-                    cursor.execute("select total_spend from id_list where order_id = %s", [BUY_ORDER_ID])
-                    r_2 = cursor.fetchall()
-                    price_results = r_2[0][0]
-                    total_buy_spend = float(price_results)
-
-                    STOP_LOSS_SELL_PNL = round((TOTAL_SELL_SPEND - total_buy_spend), 2)
-                    stop_loss_sell_per = (STOP_LOSS_SELL_PNL / total_buy_spend) * 100
-                    STOP_LOSS_SELL_PNL_PERCENTAGE = str((round(stop_loss_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL(
-                        "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
-                                   [sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,
-                                    STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,
-                                    STOP_LOSS_SELL_ORDER_QTY, STOP_LOSS_SELL_PNL, STOP_LOSS_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-                if req_position_type == "Exit_long":
-                    cursor.execute("select qty from long_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_long_entry_qty = float(price_results)
-                    print(f"previous_long_entry_qty = {previous_long_entry_qty}")
-
-                    cursor.execute("select total_spend from long_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_long_entry_spend = float(price_results)
-                    print(f"previous_long_entry_spend = {previous_long_entry_spend}")
-
-                    proportional_buy_spend = (previous_long_entry_spend / previous_long_entry_qty) * STOP_LOSS_SELL_ORDER_QTY
-                    STOP_LOSS_SELL_PNL = round((TOTAL_SELL_SPEND - proportional_buy_spend), 2)
-                    sl_sell_per = (STOP_LOSS_SELL_PNL / proportional_buy_spend) * 100
-                    STOP_LOSS_SELL_PNL_PERCENTAGE = str((round(sl_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,STOP_LOSS_SELL_ORDER_QTY, STOP_LOSS_SELL_PNL, STOP_LOSS_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-                if req_position_type == "Enter_short":
-
-                    cursor.execute("select exists (select 1 from short_entry)")
-                    r_1 = cursor.fetchall()
-                    live_r = r_1[0][0]
-
-                    if live_r == False:
-                        cursor.execute(sql.SQL(
-                            "insert into short_entry(order_id, entry_price, total_spend, symbol, qty) values (%s, %s, %s, %s, %s)"),
-                                       [STOP_LOSS_SELL_ORDER_ID, STOP_LOSS_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, STOP_LOSS_SELL_ORDER_SYMBOL,STOP_LOSS_SELL_ORDER_QTY])
-                        conn.commit()
-                    if live_r == True:
-                        cursor.execute(
-                            "update short_entry set order_id = %s, entry_price = %s, total_spend = %s, symbol = %s, qty = %s",
-                            [STOP_LOSS_SELL_ORDER_ID, STOP_LOSS_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, STOP_LOSS_SELL_ORDER_SYMBOL,STOP_LOSS_SELL_ORDER_QTY])
-                        conn.commit()
-                        print("Records inserted")
-
-                    cursor.execute(sql.SQL(
-                        "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty) values (%s, %s, %s, %s, %s, %s, %s)"),
-                                   [sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,
-                                    STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,
-                                    STOP_LOSS_SELL_ORDER_QTY])
-                    conn.commit()
-
-                if req_position_type == "Exit_short":
-                    cursor.execute("select total_spend from short_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_short_entry_income = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_income}")
-
-                    cursor.execute("select qty from short_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_short_entry_qty = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_qty}")
-
-                    actual_sell_income = (previous_short_entry_income / 100) * 99.9
-                    proportional_sell_income = (actual_sell_income / previous_short_entry_qty) * STOP_LOSS_SELL_ORDER_QTY
-                    STOP_LOSS_SELL_PNL = round((proportional_sell_income - TOTAL_BUY_SPEND), 2)
-                    sl_sell_per = (STOP_LOSS_SELL_PNL / proportional_sell_income) * 100
-                    STOP_LOSS_SELL_PNL_PERCENTAGE = str((round(sl_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL(
-                        "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
-                        [sell_order_executed_time, STOP_LOSS_SELL_ORDER_SYMBOL, STOP_LOSS_SELL_ORDER_ID,
-                         STOP_LOSS_SELL_ORDER_ACTION, STOP_LOSS_SELL_ORDER_TYPE, STOP_LOSS_SELL_ORDER_PRICE,
-                         STOP_LOSS_SELL_ORDER_QTY, STOP_LOSS_SELL_PNL, STOP_LOSS_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-            except Exception as e:
-                print(e)
-
+            t20 = threading.Thread(target=add_to_trade_sl)
+            t20.start()
 
         def execute_limit_take_profit_order(SPOT_SIDE,req_position_type,BUY_ORDER_ID, SPOT_SYMBOL, SPOT_SELL_QUANTITY, TAKE_PROFIT_PRICE_FINAL, SPOT_ENTRY,req_multi_tp,req_qty_size,req_order_time_out):
             print(SPOT_SIDE)
@@ -820,149 +823,151 @@ try:
             limit_take_proft_order_ID = limit_take_proft_order["orderId"]
             print(limit_take_proft_order_ID)
 
-            # Loop and check if entry order is filled
-            entry_order_timeout_start = time.time()
+            def add_to_trade_tp():
+                while True:
+                    time.sleep(4)
+                    try:
+                        time.sleep(1)
+                        active_order = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
+                        active_order_status = active_order["status"]
+                        if active_order_status == "FILLED":
+                            break
+                    except Exception as e:
+                        print(e)
+                        pass
+                if active_order_status == "FILLED":
+                    enter_long_take_profit_order = active_order
+                    print(f"enter long take profit order = {enter_long_take_profit_order}")
+                else:
+                    check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
+                    if check_for_partial["status"] == "PARTIALLY_FILLED":
+                        enter_long_take_profit_order = check_for_partial
+                    check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
+                    if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
+                        print("Already cancelled")
+                    else:
+                        cancel_stop_loss_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
+                    error_occured = "Order time limit reached! Pending open oco sell orders have been cancelled"
+                    print(error_occured)
+                    error_occured_time = datetime.now()
+                    cursor.execute(
+                        "insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
+                        [SPOT_SYMBOL, SPOT_SIDE, SPOT_ENTRY, SPOT_EXIT, SPOT_SELL_QUANTITY, error_occured_time, error_occured])
+                    conn.commit()
 
-            while time.time() < (entry_order_timeout_start + req_order_time_out):
                 try:
-                    time.sleep(1)
-                    active_order = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
-                    active_order_status = active_order["status"]
-                    if active_order_status == "FILLED":
-                        break
+                    TAKE_PROFIT_SELL_ORDER_ID = enter_long_take_profit_order["orderId"]
+                    TAKE_PROFIT_SELL_ORDER_SYMBOL = enter_long_take_profit_order["symbol"]
+                    TAKE_PROFIT_SELL_ORDER_QTY = float(enter_long_take_profit_order["executedQty"])
+                    sell_cum_qty = float(enter_long_take_profit_order["cummulativeQuoteQty"])
+                    TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
+                    TOTAL_BUY_SPEND = float(enter_long_take_profit_order["cummulativeQuoteQty"])
+                    TAKE_PROFIT_SELL_ORDER_PRICE = round((float(enter_long_take_profit_order["cummulativeQuoteQty"]) / float(enter_long_take_profit_order["executedQty"])),3)
+                    TAKE_PROFIT_SELL_ORDER_ACTION = enter_long_take_profit_order["side"]
+                    TAKE_PROFIT_SELL_ORDER_TYPE = enter_long_take_profit_order["type"]
+                    sell_order_executed_time = datetime.now()
+
+                    if req_position_type == "Enter_long":
+                        cursor.execute("select total_spend from id_list where order_id = %s", [BUY_ORDER_ID])
+                        r_2 = cursor.fetchall()
+                        price_results = r_2[0][0]
+                        total_buy_spend = float(price_results)
+
+                        if req_multi_tp == "No":
+                            TAKE_PROFIT_SELL_PNL = round((TOTAL_SELL_SPEND - total_buy_spend), 2)
+                            take_profit_sell_per = (TAKE_PROFIT_SELL_PNL / total_buy_spend) * 100
+                            TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(take_profit_sell_per, 2))) + "%"
+                        if req_multi_tp == "Yes":
+                            buy_spend_per = float(total_buy_spend) * float(req_qty_size)
+                            TAKE_PROFIT_SELL_PNL = round((TOTAL_SELL_SPEND - buy_spend_per), 2)
+                            take_profit_sell_per = (TAKE_PROFIT_SELL_PNL / buy_spend_per) * 100
+                            TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(take_profit_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL(
+                            "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
+                                       [sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,
+                                        TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,
+                                        TAKE_PROFIT_SELL_ORDER_QTY, TAKE_PROFIT_SELL_PNL, TAKE_PROFIT_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
+                    if req_position_type == "Exit_long":
+                        cursor.execute("select qty from long_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_long_entry_qty = float(price_results)
+                        print(f"previous_long_entry_qty = {previous_long_entry_qty}")
+
+                        cursor.execute("select total_spend from long_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_long_entry_spend = float(price_results)
+                        print(f"previous_long_entry_spend = {previous_long_entry_spend}")
+
+                        proportional_buy_spend = (previous_long_entry_spend / previous_long_entry_qty) * TAKE_PROFIT_SELL_ORDER_QTY
+                        TAKE_PROFIT_SELL_PNL = round((TOTAL_SELL_SPEND - proportional_buy_spend), 2)
+                        tp_sell_per = (TAKE_PROFIT_SELL_PNL / proportional_buy_spend) * 100
+                        TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(tp_sell_per, 2))) + "%"
+
+
+                        cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,TAKE_PROFIT_SELL_ORDER_QTY, TAKE_PROFIT_SELL_PNL, TAKE_PROFIT_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
+                    if req_position_type == "Enter_short":
+
+                        cursor.execute("select exists (select 1 from short_entry)")
+                        r_1 = cursor.fetchall()
+                        live_r = r_1[0][0]
+
+                        if live_r == False:
+                            cursor.execute(sql.SQL(
+                                "insert into short_entry(order_id, entry_price, total_spend, symbol, qty) values (%s, %s, %s, %s, %s)"),
+                                [TAKE_PROFIT_SELL_ORDER_ID, TAKE_PROFIT_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, TAKE_PROFIT_SELL_ORDER_SYMBOL,TAKE_PROFIT_SELL_ORDER_QTY])
+                            conn.commit()
+                        if live_r == True:
+                            cursor.execute(
+                                "update short_entry set order_id = %s, entry_price = %s, total_spend = %s, symbol = %s, qty = %s",
+                                [TAKE_PROFIT_SELL_ORDER_ID, TAKE_PROFIT_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, TAKE_PROFIT_SELL_ORDER_SYMBOL,TAKE_PROFIT_SELL_ORDER_QTY])
+                            conn.commit()
+                            print("Records inserted")
+
+                        cursor.execute(sql.SQL(
+                            "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty) values (%s, %s, %s, %s, %s, %s, %s)"),
+                                       [sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,
+                                        TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,
+                                        TAKE_PROFIT_SELL_ORDER_QTY])
+                        conn.commit()
+
+                    if req_position_type == "Exit_short":
+                        cursor.execute("select total_spend from short_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_short_entry_income = float(price_results)
+                        print(f"previous_short_entry_price = {previous_short_entry_income}")
+
+                        cursor.execute("select qty from short_entry where symbol = %s", [SPOT_SYMBOL])
+                        r_3 = cursor.fetchall()
+                        price_results = r_3[0][0]
+                        previous_short_entry_qty = float(price_results)
+                        print(f"previous_short_entry_price = {previous_short_entry_qty}")
+
+                        actual_sell_income = (previous_short_entry_income / 100) * 99.9
+                        proportional_sell_income = (actual_sell_income / previous_short_entry_qty) * TAKE_PROFIT_SELL_ORDER_QTY
+                        TAKE_PROFIT_SELL_PNL = round((proportional_sell_income - TOTAL_BUY_SPEND), 2)
+                        tp_sell_per = (TAKE_PROFIT_SELL_PNL / proportional_sell_income) * 100
+                        TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(tp_sell_per, 2))) + "%"
+
+                        cursor.execute(sql.SQL(
+                            "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
+                                       [sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,
+                                        TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,
+                                        TAKE_PROFIT_SELL_ORDER_QTY, TAKE_PROFIT_SELL_PNL, TAKE_PROFIT_SELL_PNL_PERCENTAGE])
+                        conn.commit()
+
                 except Exception as e:
                     print(e)
-                    pass
-            if active_order_status == "FILLED":
-                enter_long_take_profit_order = active_order
-                print(f"enter long take profit order = {enter_long_take_profit_order}")
-            else:
-                check_for_partial = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
-                if check_for_partial["status"] == "PARTIALLY_FILLED":
-                    enter_long_take_profit_order = check_for_partial
-                check_for_cancel = client.get_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
-                if check_for_cancel["status"] == "CANCELED" or check_for_cancel["status"] != "PARTIALLY_FILLED" or check_for_cancel["status"] != "FILLED":
-                    print("Already cancelled")
-                else:
-                    cancel_stop_loss_order = client.cancel_order(symbol=SPOT_SYMBOL, orderId=limit_take_proft_order_ID)
-                error_occured = "Order time limit reached! Pending open oco sell orders have been cancelled"
-                print(error_occured)
-                error_occured_time = datetime.now()
-                cursor.execute(
-                    "insert into error_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
-                    [SPOT_SYMBOL, SPOT_SIDE, SPOT_ENTRY, SPOT_EXIT, SPOT_SELL_QUANTITY, error_occured_time, error_occured])
-                conn.commit()
 
-            try:
-                TAKE_PROFIT_SELL_ORDER_ID = enter_long_take_profit_order["orderId"]
-                TAKE_PROFIT_SELL_ORDER_SYMBOL = enter_long_take_profit_order["symbol"]
-                TAKE_PROFIT_SELL_ORDER_QTY = float(enter_long_take_profit_order["executedQty"])
-                sell_cum_qty = float(enter_long_take_profit_order["cummulativeQuoteQty"])
-                TOTAL_SELL_SPEND = (sell_cum_qty / 100) * 99.9
-                TOTAL_BUY_SPEND = float(enter_long_take_profit_order["cummulativeQuoteQty"])
-                TAKE_PROFIT_SELL_ORDER_PRICE = round((float(enter_long_take_profit_order["cummulativeQuoteQty"]) / float(enter_long_take_profit_order["executedQty"])),3)
-                TAKE_PROFIT_SELL_ORDER_ACTION = enter_long_take_profit_order["side"]
-                TAKE_PROFIT_SELL_ORDER_TYPE = enter_long_take_profit_order["type"]
-                sell_order_executed_time = datetime.now()
-
-                if req_position_type == "Enter_long":
-                    cursor.execute("select total_spend from id_list where order_id = %s", [BUY_ORDER_ID])
-                    r_2 = cursor.fetchall()
-                    price_results = r_2[0][0]
-                    total_buy_spend = float(price_results)
-
-                    if req_multi_tp == "No":
-                        TAKE_PROFIT_SELL_PNL = round((TOTAL_SELL_SPEND - total_buy_spend), 2)
-                        take_profit_sell_per = (TAKE_PROFIT_SELL_PNL / total_buy_spend) * 100
-                        TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(take_profit_sell_per, 2))) + "%"
-                    if req_multi_tp == "Yes":
-                        buy_spend_per = float(total_buy_spend) * float(req_qty_size)
-                        TAKE_PROFIT_SELL_PNL = round((TOTAL_SELL_SPEND - buy_spend_per), 2)
-                        take_profit_sell_per = (TAKE_PROFIT_SELL_PNL / buy_spend_per) * 100
-                        TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(take_profit_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL(
-                        "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
-                                   [sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,
-                                    TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,
-                                    TAKE_PROFIT_SELL_ORDER_QTY, TAKE_PROFIT_SELL_PNL, TAKE_PROFIT_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-                if req_position_type == "Exit_long":
-                    cursor.execute("select qty from long_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_long_entry_qty = float(price_results)
-                    print(f"previous_long_entry_qty = {previous_long_entry_qty}")
-
-                    cursor.execute("select total_spend from long_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_long_entry_spend = float(price_results)
-                    print(f"previous_long_entry_spend = {previous_long_entry_spend}")
-
-                    proportional_buy_spend = (previous_long_entry_spend / previous_long_entry_qty) * TAKE_PROFIT_SELL_ORDER_QTY
-                    TAKE_PROFIT_SELL_PNL = round((TOTAL_SELL_SPEND - proportional_buy_spend), 2)
-                    tp_sell_per = (TAKE_PROFIT_SELL_PNL / proportional_buy_spend) * 100
-                    TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(tp_sell_per, 2))) + "%"
-
-
-                    cursor.execute(sql.SQL("insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),[sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,TAKE_PROFIT_SELL_ORDER_QTY, TAKE_PROFIT_SELL_PNL, TAKE_PROFIT_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-                if req_position_type == "Enter_short":
-
-                    cursor.execute("select exists (select 1 from short_entry)")
-                    r_1 = cursor.fetchall()
-                    live_r = r_1[0][0]
-
-                    if live_r == False:
-                        cursor.execute(sql.SQL(
-                            "insert into short_entry(order_id, entry_price, total_spend, symbol, qty) values (%s, %s, %s, %s, %s)"),
-                            [TAKE_PROFIT_SELL_ORDER_ID, TAKE_PROFIT_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, TAKE_PROFIT_SELL_ORDER_SYMBOL,TAKE_PROFIT_SELL_ORDER_QTY])
-                        conn.commit()
-                    if live_r == True:
-                        cursor.execute(
-                            "update short_entry set order_id = %s, entry_price = %s, total_spend = %s, symbol = %s, qty = %s",
-                            [TAKE_PROFIT_SELL_ORDER_ID, TAKE_PROFIT_SELL_ORDER_PRICE, TOTAL_SELL_SPEND, TAKE_PROFIT_SELL_ORDER_SYMBOL,TAKE_PROFIT_SELL_ORDER_QTY])
-                        conn.commit()
-                        print("Records inserted")
-
-                    cursor.execute(sql.SQL(
-                        "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty) values (%s, %s, %s, %s, %s, %s, %s)"),
-                                   [sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,
-                                    TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,
-                                    TAKE_PROFIT_SELL_ORDER_QTY])
-                    conn.commit()
-
-                if req_position_type == "Exit_short":
-                    cursor.execute("select total_spend from short_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_short_entry_income = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_income}")
-
-                    cursor.execute("select qty from short_entry where symbol = %s", [SPOT_SYMBOL])
-                    r_3 = cursor.fetchall()
-                    price_results = r_3[0][0]
-                    previous_short_entry_qty = float(price_results)
-                    print(f"previous_short_entry_price = {previous_short_entry_qty}")
-
-                    actual_sell_income = (previous_short_entry_income / 100) * 99.9
-                    proportional_sell_income = (actual_sell_income / previous_short_entry_qty) * TAKE_PROFIT_SELL_ORDER_QTY
-                    TAKE_PROFIT_SELL_PNL = round((proportional_sell_income - TOTAL_BUY_SPEND), 2)
-                    tp_sell_per = (TAKE_PROFIT_SELL_PNL / proportional_sell_income) * 100
-                    TAKE_PROFIT_SELL_PNL_PERCENTAGE = str((round(tp_sell_per, 2))) + "%"
-
-                    cursor.execute(sql.SQL(
-                        "insert into trade_log(date_time, symbol, order_id, order_action, order_type, executed_price, executed_qty, pnl, percentage) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)"),
-                                   [sell_order_executed_time, TAKE_PROFIT_SELL_ORDER_SYMBOL, TAKE_PROFIT_SELL_ORDER_ID,
-                                    TAKE_PROFIT_SELL_ORDER_ACTION, TAKE_PROFIT_SELL_ORDER_TYPE, TAKE_PROFIT_SELL_ORDER_PRICE,
-                                    TAKE_PROFIT_SELL_ORDER_QTY, TAKE_PROFIT_SELL_PNL, TAKE_PROFIT_SELL_PNL_PERCENTAGE])
-                    conn.commit()
-
-            except Exception as e:
-                print(e)
+            t21 = threading.Thread(target=add_to_trade_tp)
+            t21.start()
 
         def proceed_enter_long(SPOT_BUY_QUANTITY,SPOT_SYMBOL,SPOT_ENTRY,req_long_stop_loss_percent,req_long_take_profit_percent,req_multi_tp,req_tp1_percent,req_tp2_percent,req_tp3_percent,req_tp1_qty_size,req_tp2_qty_size,req_tp3_qty_size,req_order_time_out):
             SPOT_EXIT = "NA"
@@ -1302,6 +1307,7 @@ try:
                     print(error_occured)
 
         def proceed_enter_short(req_position_type,SPOT_SELL_QUANTITY_EL,SPOT_SYMBOL,req_short_stop_loss_percent,req_short_take_profit_percent,req_multi_tp,req_tp1_percent,req_tp2_percent,req_tp3_percent,req_tp1_qty_size,req_tp2_qty_size,req_tp3_qty_size,req_order_time_out):
+
             SPOT_ENTRY = "NA"
             SPOT_SIDE = "SELL"
 
@@ -1352,7 +1358,7 @@ try:
                     print(f"Take profit price final_2 = {TAKE_PROFIT_PRICE_FINAL_2}")
                     print(f"Take profit price final_3 = {TAKE_PROFIT_PRICE_FINAL_3}")
 
-                    if req_long_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
+                    if req_short_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY, req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                             t1.start()
@@ -1363,11 +1369,11 @@ try:
                             t3 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID, SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_3,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_3,STOP_LOSS_PRICE_FINAL=STOP_LOSS_PRICE_FINAL,SPOT_ENTRY=SPOT_ENTRY, req_multi_tp=req_multi_tp,req_qty_size=req_tp3_qty_size,req_order_time_out=req_order_time_out))
                             t3.start()
 
-                    elif req_long_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
+                    elif req_short_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
                         execute_limit_stop_loss_order(SPOT_SIDE,req_position_type,BUY_ORDER_ID, SPOT_SYMBOL, SPOT_SELL_QUANTITY_EL, STOP_LOSS_PRICE_FINAL,SPOT_ENTRY,req_order_time_out)
 
 
-                    elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
+                    elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_short_stop_loss_percent == "" or req_short_stop_loss_percent == 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_take_profit_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,BUY_ORDER_ID=BUY_ORDER_ID,SPOT_SYMBOL=SPOT_SYMBOL,SPOT_SELL_QUANTITY=SELLABLE_1,TAKE_PROFIT_PRICE_FINAL=TAKE_PROFIT_PRICE_FINAL_1,SPOT_ENTRY=SPOT_ENTRY,req_multi_tp=req_multi_tp,req_qty_size=req_tp1_qty_size,req_order_time_out=req_order_time_out))
                             t1.start()
@@ -1554,7 +1560,7 @@ try:
                     print(f"Take profit price final_2 = {TAKE_PROFIT_PRICE_FINAL_2}")
                     print(f"Take profit price final_3 = {TAKE_PROFIT_PRICE_FINAL_3}")
 
-                    if req_long_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
+                    if req_short_stop_loss_percent > 0 and (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(target=lambda: execute_limit_oco_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,
                                                                                          BUY_ORDER_ID=BUY_ORDER_ID,
@@ -1590,12 +1596,12 @@ try:
                             t3.start()
 
 
-                    elif req_long_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
+                    elif req_short_stop_loss_percent > 0 and (req_tp1_percent == 0 and req_tp2_percent == 0 and req_tp3_percent == 0):
                         execute_limit_stop_loss_order(SPOT_SIDE,req_position_type, BUY_ORDER_ID, SPOT_SYMBOL, SPOT_BUY_QUANTITY_EL,
                                                       STOP_LOSS_PRICE_FINAL, SPOT_ENTRY,req_order_time_out)
 
 
-                    elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_long_stop_loss_percent == "" or req_long_stop_loss_percent == 0):
+                    elif (req_tp1_percent > 0 or req_tp2_percent > 0 or req_tp3_percent > 0) and (req_short_stop_loss_percent == "" or req_short_stop_loss_percent == 0):
                         if req_tp1_percent > 0:
                             t1 = threading.Thread(
                                 target=lambda: execute_limit_take_profit_order(SPOT_SIDE=SPOT_SIDE,req_position_type=req_position_type,
@@ -1639,8 +1645,8 @@ try:
 
                 elif req_position_type == "Exit_short":
                     SPOT_BUY_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
-                    proceed_exit_short(req_position_type, SPOT_BUY_QUANTITY_EL, SPOT_SYMBOL,req_long_stop_loss_percent,
-                                      req_long_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                    proceed_exit_short(req_position_type, SPOT_BUY_QUANTITY_EL, SPOT_SYMBOL,req_short_stop_loss_percent,
+                                      req_short_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
                                       req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
                                       req_order_time_out)
 
@@ -1653,8 +1659,8 @@ try:
 
                 elif req_position_type == "Enter_short":
                     SPOT_SELL_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
-                    proceed_enter_short(req_position_type, SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, req_long_stop_loss_percent,
-                     req_long_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent, req_tp3_percent,
+                    proceed_enter_short(req_position_type, SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, req_short_stop_loss_percent,
+                     req_short_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent, req_tp3_percent,
                      req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size, req_order_time_out)
 
         else:
