@@ -91,6 +91,13 @@ def welcome():
 @app.route('/profile',methods=["POST","GET"])
 def get_profile():
     if request.method == "GET":
+        cursor.execute("delete from futures_t_log")
+        conn.commit()
+        print("Records inserted")
+
+        cursor.execute("delete from futures_e_log")
+        conn.commit()
+        print("Records inserted")
         try:
             cursor.execute("select api_key from binance_keys")
             r_2 = cursor.fetchall()
@@ -3511,6 +3518,11 @@ def process_alert():
                         tp_order_id = 0
 
                 if req_multi_tp == "Yes":
+                    total_tp = req_tp1_percent + req_tp2_percent + req_tp3_percent
+                    if total_tp == 100:
+                        close_position = "Yes"
+                    else:
+                        close_position = "No"
                     tp_order_id = 0
                     if req_tp1_percent > 0:
                         try:
@@ -3541,16 +3553,28 @@ def process_alert():
                         tp_order_id_1 = 0
                     if req_tp2_percent > 0:
                         try:
-                            take_profit_order_2 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
-                                                                              type='TAKE_PROFIT_MARKET',
-                                                                              stopPrice=TAKE_PROFIT_PRICE_FINAL_2,
-                                                                              quantity=SELLABLE_2)
-                            print(take_profit_order_2)
-                            tp_order_id_2 = take_profit_order_2["orderId"]
+                            if req_tp3_percent == 0 and close_position == "Yes":
+                                take_profit_order_2 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
+                                                                                  type='TAKE_PROFIT_MARKET',
+                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_2,
+                                                                                  quantity=SELLABLE_2,closePosition="true")
+                                print(take_profit_order_2)
+                                tp_order_id_2 = take_profit_order_2["orderId"]
 
-                            cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s, %s)",
-                                           [tp_order_id_2, entry_price, SELLABLE_2])
-                            conn.commit()
+                                cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s, %s)",
+                                               [tp_order_id_2, entry_price, SELLABLE_2])
+                                conn.commit()
+                            else:
+                                take_profit_order_2 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
+                                                                                  type='TAKE_PROFIT_MARKET',
+                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_2,
+                                                                                  quantity=SELLABLE_2)
+                                print(take_profit_order_2)
+                                tp_order_id_2 = take_profit_order_2["orderId"]
+
+                                cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s, %s)",
+                                               [tp_order_id_2, entry_price, SELLABLE_2])
+                                conn.commit()
 
                         except Exception as e:
                             tp_order_id_2 = 0
@@ -3568,16 +3592,28 @@ def process_alert():
                         tp_order_id_2 = 0
                     if req_tp3_percent > 0:
                         try:
-                            take_profit_order_3 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
-                                                                              type='TAKE_PROFIT_MARKET',
-                                                                              stopPrice=TAKE_PROFIT_PRICE_FINAL_3,
-                                                                              quantity=SELLABLE_3)
-                            print(take_profit_order_3)
-                            tp_order_id_3 = take_profit_order_3["orderId"]
+                            if close_position == "No":
+                                take_profit_order_3 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
+                                                                                  type='TAKE_PROFIT_MARKET',
+                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_3,
+                                                                                  quantity=SELLABLE_3)
+                                print(take_profit_order_3)
+                                tp_order_id_3 = take_profit_order_3["orderId"]
 
-                            cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s, %s)",
-                                           [tp_order_id_3, entry_price, SELLABLE_3])
-                            conn.commit()
+                                cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s, %s)",
+                                               [tp_order_id_3, entry_price, SELLABLE_3])
+                                conn.commit()
+                            if close_position == "Yes":
+                                take_profit_order_3 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
+                                                                                  type='TAKE_PROFIT_MARKET',
+                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_3,
+                                                                                  quantity=SELLABLE_3,closePosition="true")
+                                print(take_profit_order_3)
+                                tp_order_id_3 = take_profit_order_3["orderId"]
+
+                                cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s, %s)",
+                                               [tp_order_id_3, entry_price, SELLABLE_3])
+                                conn.commit()
 
                         except Exception as e:
                             tp_order_id_3 = 0
@@ -3657,6 +3693,7 @@ def process_alert():
                         print(f"futures order = {futures_order}")
                         order_id = futures_order["orderId"]
                     except Exception as e:
+
                         error_occured = f"{e}"
                         print(error_occured)
                         error_occured_time = datetime.now()
