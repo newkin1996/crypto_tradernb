@@ -656,6 +656,8 @@ def get_futures():
         cursor.execute(trade_order_statement)
         trade_rowResults = cursor.fetchall()
         trade_list_length = len(trade_rowResults)
+        for i in range(0, trade_list_length)[::-1]:
+            print(i)
 
         try:
             deposits = client.get_deposit_history()
