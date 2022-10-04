@@ -3552,7 +3552,7 @@ def process_alert():
 
                 if req_multi_tp == "Yes":
                     total_tp = req_tp1_qty_size + req_tp2_qty_size + req_tp3_qty_size
-                    print(f"TOTAL TP ============================= {total_tp}")
+                    print(f"TOTAL TP ============================== {total_tp}")
                     if total_tp == 1:
                         close_position = "Yes"
                         print("Hellowwwwwwwwwwwwwwww")
