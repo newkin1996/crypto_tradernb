@@ -29,29 +29,29 @@ print("Connection established to: ",data)
 
 alert_response = {"exchange":"Binance",
  "base_coin":"USDT",
- "coin_pair": "XVSUSDT",
+ "coin_pair": "DOTUSDT",
  "entry_type":"Market",
  "exit_type":"Limit",
  "long_leverage": 2,
  "short_leverage": 2,
  "margin_mode":"Isolated",
  "qty_type": "Fixed",
- "qty": 21,
- "trade_type": "Spot",
- "long_stop_loss_percent":0,
+ "qty": 11,
+ "trade_type": "Futures",
+ "long_stop_loss_percent":0.05,
  "long_take_profit_percent":0,
  "short_stop_loss_percent":0,
  "short_take_profit_percent":0,
- "enable_multi_tp":"No",
- "tp_1_pos_size":0,
- "tp1_percent":0,
- "tp_2_pos_size":0,
- "tp2_percent":0,
+ "enable_multi_tp":"Yes",
+ "tp_1_pos_size":50,
+ "tp1_percent":0.025,
+ "tp_2_pos_size":50,
+ "tp2_percent":0.03,
  "tp_3_pos_size":0,
  "tp3_percent":0,
  "stop_bot_below_balance":1,
  "order_time_out":120,
- "position_type": "Exit_short"}
+ "position_type": "Enter_long"}
 
 try:
     req_exchange = alert_response["exchange"]
@@ -1779,27 +1779,27 @@ if req_trade_type == "Futures":
                 current_market_price = float(ticker["price"])
                 break
         tradeable_qty = qty_in_base_coin / current_market_price
-        info = client.get_symbol_info(FUTURES_SYMBOL)
-        for x in info["filters"]:
-            if x["filterType"] == "LOT_SIZE":
-                stepSize = float(x["stepSize"])
-                print(f"step size = {stepSize}")
 
-        truncate_num = math.log10(1 / stepSize)
-        BUY_QUANTITY = math.floor((tradeable_qty) * 10 ** truncate_num) / 10 ** truncate_num
+        info = client.futures_exchange_info()
+        for sym in info["symbols"]:
+            if (sym["symbol"] == FUTURES_SYMBOL):
+                quantity_precision = int(sym["quantityPrecision"])
+                print("quantity_precision: " + str(quantity_precision))
+                break
+        BUY_QUANTITY = math.floor((tradeable_qty) * 10 ** quantity_precision) / 10 ** quantity_precision  # quantity_precision = truncate_num
+        print(f"buy qty = {BUY_QUANTITY}")
         return BUY_QUANTITY
 
-    def futures_calculate_sell_qty_with_precision(SPOT_SYMBOL, buy_qty):
-        info = client.get_symbol_info(SPOT_SYMBOL)
-        for x in info["filters"]:
-            if x["filterType"] == "LOT_SIZE":
-                stepSize = float(x["stepSize"])
-                print(f"step size = {stepSize}")
-
-        truncate_num = math.log10(1 / stepSize)
-        SELL_QUANTITY = math.floor((buy_qty) * 10 ** truncate_num) / 10 ** truncate_num
+    def futures_calculate_sell_qty_with_precision(FUTURES_SYMBOL, qty_in_base_coin):
+        info = client.futures_exchange_info()
+        for sym in info["symbols"]:
+            if (sym["symbol"] == FUTURES_SYMBOL):
+                quantity_precision = int(sym["quantityPrecision"])
+                print("quantity_precision: " + str(quantity_precision))
+                break
+        SELL_QUANTITY = math.floor((qty_in_base_coin) * 10 ** quantity_precision) / 10 ** quantity_precision  # quantity_precision = truncate_num
+        print(f"sell qty = {SELL_QUANTITY}")
         return SELL_QUANTITY
-
 
     def futures_cal_price_with_precision(FUTURES_SYMBOL, input_price):
         info = client.futures_exchange_info()
@@ -2150,18 +2150,18 @@ if req_trade_type == "Futures":
         conn.commit()
 
         if req_long_stop_loss_percent > 0 or req_long_take_profit_percent > 0 or req_multi_tp == "Yes" or req_short_stop_loss_percent > 0 or req_short_take_profit_percent > 0:
-            # Assign leverage for quantity calculation
+
             FUTURES_EXIT = "LIMIT"
             if side == "BUY":
                 exit_side = "SELL"
-                short_stop_loss_bp = entry_price - (entry_price * req_short_stop_loss_percent)
+                short_stop_loss_bp = entry_price - (entry_price * req_long_stop_loss_percent)
 
                 STOP_LOSS_PRICE_FINAL = futures_cal_price_with_precision(FUTURES_SYMBOL=FUTURES_SYMBOL,
                                                                  input_price=short_stop_loss_bp)
                 print(f"Stop loss price final = {STOP_LOSS_PRICE_FINAL}")
 
                 if req_multi_tp == "No":
-                    short_take_profit_bp = entry_price + (entry_price * req_short_take_profit_percent)
+                    short_take_profit_bp = entry_price + (entry_price * req_long_take_profit_percent)
                     TAKE_PROFIT_PRICE_FINAL = futures_cal_price_with_precision(FUTURES_SYMBOL=FUTURES_SYMBOL,
                                                                        input_price=short_take_profit_bp)
                     print(f"Take profit price final = {TAKE_PROFIT_PRICE_FINAL}")
@@ -2186,13 +2186,13 @@ if req_trade_type == "Futures":
 
             elif side == "SELL":
                 exit_side = "BUY"
-                long_stop_loss_bp = entry_price + (entry_price * req_long_stop_loss_percent)
+                long_stop_loss_bp = entry_price + (entry_price * req_short_stop_loss_percent)
                 STOP_LOSS_PRICE_FINAL = futures_cal_price_with_precision(FUTURES_SYMBOL=FUTURES_SYMBOL,
                                                                  input_price=long_stop_loss_bp)
                 print(f"Stop loss price final = {STOP_LOSS_PRICE_FINAL}")
 
                 if req_multi_tp == "No":
-                    long_take_profit_bp = entry_price - (entry_price * req_long_take_profit_percent)
+                    long_take_profit_bp = entry_price - (entry_price * req_short_take_profit_percent)
                     TAKE_PROFIT_PRICE_FINAL = futures_cal_price_with_precision(FUTURES_SYMBOL=FUTURES_SYMBOL,
                                                                        input_price=long_take_profit_bp)
                     print(f"Take profit price final = {TAKE_PROFIT_PRICE_FINAL}")
@@ -2214,46 +2214,20 @@ if req_trade_type == "Futures":
                                                                          input_price=long_take_profit_bp_2)
                     TAKE_PROFIT_PRICE_FINAL_3 = futures_cal_price_with_precision(FUTURES_SYMBOL=FUTURES_SYMBOL,
                                                                          input_price=long_take_profit_bp_3)
-
-            try:
-                stoploss_order = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side, type='STOP_MARKET',
-                                                             stopPrice=STOP_LOSS_PRICE_FINAL,
-                                                             closePosition="true")
-                print(stoploss_order)
-                stoploss_order_id = stoploss_order["orderId"]
-
-                cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s,  %s)",
-                               [stoploss_order_id, entry_price, INITIAL_ORDER_QTY])
-                conn.commit()
-
-            except Exception as e:
-                error_occured = f"{e}"
-                print(error_occured)
-                error_occured_time = datetime.now()
-
-                cursor.execute(
-                    "insert into futures_e_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
-                    [FUTURES_SYMBOL, exit_side, FUTURES_ENTRY, FUTURES_EXIT, FUTURES_QUANTITY, error_occured_time,
-                     error_occured])
-                conn.commit()
-
-            if req_multi_tp == "No":
-                tp_order_id_1 = 0
-                tp_order_id_2 = 0
-                tp_order_id_3 = 0
+            if req_long_stop_loss_percent != 0 or req_short_stop_loss_percent != 0:
                 try:
-                    take_profit_order = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
-                                                                    type='TAKE_PROFIT_MARKET',
-                                                                    stopPrice=TAKE_PROFIT_PRICE_FINAL,
-                                                                    closePosition="true")
-                    print(take_profit_order)
-                    tp_order_id = take_profit_order["orderId"]
+                    stoploss_order = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side, type='STOP_MARKET',
+                                                                 stopPrice=STOP_LOSS_PRICE_FINAL,
+                                                                 closePosition="true")
+                    print(stoploss_order)
+                    stoploss_order_id = stoploss_order["orderId"]
 
-                    cursor.execute("insert into f_id_list(order_id, entry_price,qty) values (%s, %s,%s)",
-                                   [tp_order_id, entry_price,INITIAL_ORDER_QTY])
+                    cursor.execute("insert into f_id_list(order_id, entry_price, qty) values (%s, %s,  %s)",
+                                   [stoploss_order_id, entry_price, INITIAL_ORDER_QTY])
                     conn.commit()
 
                 except Exception as e:
+                    stoploss_order_id = 0
                     error_occured = f"{e}"
                     print(error_occured)
                     error_occured_time = datetime.now()
@@ -2263,6 +2237,40 @@ if req_trade_type == "Futures":
                         [FUTURES_SYMBOL, exit_side, FUTURES_ENTRY, FUTURES_EXIT, FUTURES_QUANTITY, error_occured_time,
                          error_occured])
                     conn.commit()
+            else:
+                stoploss_order_id = 0
+
+            if req_multi_tp == "No":
+                tp_order_id_1 = 0
+                tp_order_id_2 = 0
+                tp_order_id_3 = 0
+                if req_long_take_profit_percent != 0 or req_short_take_profit_percent != 0:
+                    try:
+                        take_profit_order = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
+                                                                        type='TAKE_PROFIT_MARKET',
+                                                                        stopPrice=TAKE_PROFIT_PRICE_FINAL,
+                                                                        closePosition="true")
+                        print(take_profit_order)
+                        tp_order_id = take_profit_order["orderId"]
+
+                        cursor.execute("insert into f_id_list(order_id, entry_price,qty) values (%s, %s,%s)",
+                                       [tp_order_id, entry_price,INITIAL_ORDER_QTY])
+                        conn.commit()
+
+                    except Exception as e:
+                        tp_order_id = 0
+                        error_occured = f"{e}"
+                        print(error_occured)
+                        error_occured_time = datetime.now()
+
+                        cursor.execute(
+                            "insert into futures_e_log(symbol, order_action, entry_order_type, exit_order_type, quantity, occured_time, error_description) values (%s, %s, %s, %s, %s, %s, %s)",
+                            [FUTURES_SYMBOL, exit_side, FUTURES_ENTRY, FUTURES_EXIT, FUTURES_QUANTITY, error_occured_time,
+                             error_occured])
+                        conn.commit()
+
+                else:
+                    tp_order_id = 0
 
             if req_multi_tp == "Yes":
                 tp_order_id = 0
@@ -2280,6 +2288,7 @@ if req_trade_type == "Futures":
                         conn.commit()
 
                     except Exception as e:
+                        tp_order_id_1 = 0
                         error_occured = f"{e}"
                         print(error_occured)
                         error_occured_time = datetime.now()
@@ -2290,6 +2299,8 @@ if req_trade_type == "Futures":
                              error_occured_time,
                              error_occured])
                         conn.commit()
+                else:
+                    tp_order_id_1 = 0
                 if req_tp2_percent > 0:
                     try:
                         take_profit_order_2 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
@@ -2304,6 +2315,7 @@ if req_trade_type == "Futures":
                         conn.commit()
 
                     except Exception as e:
+                        tp_order_id_2 = 0
                         error_occured = f"{e}"
                         print(error_occured)
                         error_occured_time = datetime.now()
@@ -2314,6 +2326,8 @@ if req_trade_type == "Futures":
                              error_occured_time,
                              error_occured])
                         conn.commit()
+                else:
+                    tp_order_id_2 = 0
                 if req_tp3_percent > 0:
                     try:
                         take_profit_order_3 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
@@ -2328,6 +2342,7 @@ if req_trade_type == "Futures":
                         conn.commit()
 
                     except Exception as e:
+                        tp_order_id_3 = 0
                         error_occured = f"{e}"
                         print(error_occured)
                         error_occured_time = datetime.now()
@@ -2338,6 +2353,8 @@ if req_trade_type == "Futures":
                              error_occured_time,
                              error_occured])
                         conn.commit()
+                else:
+                    tp_order_id_3 = 0
 
             t11 = threading.Thread(
                 target=lambda: check_exit_status(FUTURES_SYMBOL=FUTURES_SYMBOL, stoploss_order_id=stoploss_order_id,
@@ -2499,44 +2516,59 @@ if req_trade_type == "Futures":
                     changed_margin_type = client.futures_change_margin_type(symbol=FUTURES_SYMBOL, marginType="ISOLATED")
                     print(changed_margin_type)
                 except Exception as e:
-                    FUTURES_SYMBOL = FUTURES_SYMBOL
-                    F_SIDE = side
-                    JSON_ENTRY = FUTURES_ENTRY
-                    error_occured_time = datetime.now()
-                    error_occured = e
-                    cursor.execute(
-                        "insert into futures_e_log(symbol, order_action, entry_order_type, occured_time, error_description) values (%s, %s, %s, %s, %s)",
-                        [FUTURES_SYMBOL, F_SIDE, JSON_ENTRY, error_occured_time, error_occured])
-                    conn.commit()
+                    print(e)
+                    error = "APIError(code=-4046): No need to change margin type."
+                    if str(e) == error:
+                        pass
+                    else:
+                        FUTURES_SYMBOL = FUTURES_SYMBOL
+                        F_SIDE = side
+                        JSON_ENTRY = FUTURES_ENTRY
+                        error_occured_time = datetime.now()
+                        error_occured = e
+                        cursor.execute(
+                            "insert into futures_e_log(symbol, order_action, entry_order_type, occured_time, error_description) values (%s, %s, %s, %s, %s)",
+                            [FUTURES_SYMBOL, F_SIDE, JSON_ENTRY, error_occured_time, error_occured])
+                        conn.commit()
             elif req_margin_mode == "Cross":
                 try:
                     changed_margin_type = client.futures_change_margin_type(symbol=FUTURES_SYMBOL, marginType="CROSSED")
                     print(changed_margin_type)
                 except Exception as e:
-                    FUTURES_SYMBOL = FUTURES_SYMBOL
-                    F_SIDE = side
-                    JSON_ENTRY = FUTURES_ENTRY
-                    error_occured_time = datetime.now()
-                    error_occured = e
-                    cursor.execute(
-                        "insert into futures_e_log(symbol, order_action, entry_order_type, occured_time, error_description) values (%s, %s, %s, %s, %s)",
-                        [FUTURES_SYMBOL, F_SIDE, JSON_ENTRY, error_occured_time, error_occured])
-                    conn.commit()
+                    print(e)
+                    error = "APIError(code=-4046): No need to change margin type."
+                    if str(e) == error:
+                        pass
+                    else:
+                        FUTURES_SYMBOL = FUTURES_SYMBOL
+                        F_SIDE = side
+                        JSON_ENTRY = FUTURES_ENTRY
+                        error_occured_time = datetime.now()
+                        error_occured = e
+                        cursor.execute(
+                            "insert into futures_e_log(symbol, order_action, entry_order_type, occured_time, error_description) values (%s, %s, %s, %s, %s)",
+                            [FUTURES_SYMBOL, F_SIDE, JSON_ENTRY, error_occured_time, error_occured])
+                        conn.commit()
 
             # Set leverage
             try:
                 changed_leverage = client.futures_change_leverage(symbol=FUTURES_SYMBOL, leverage=leverage)
                 print("Changed leverage to: " + str(changed_leverage))
             except Exception as e:
-                FUTURES_SYMBOL = FUTURES_SYMBOL
-                F_SIDE = side
-                JSON_ENTRY = FUTURES_ENTRY
-                error_occured_time = datetime.now()
-                error_occured = e
-                cursor.execute(
-                    "insert into futures_e_log(symbol, order_action, entry_order_type, occured_time, error_description) values (%s, %s, %s, %s, %s)",
-                    [FUTURES_SYMBOL, F_SIDE, JSON_ENTRY, error_occured_time, error_occured])
-                conn.commit()
+                print(e)
+                error = "APIError(code=-4046): No need to change leverage."
+                if str(e) == error:
+                    pass
+                else:
+                    FUTURES_SYMBOL = FUTURES_SYMBOL
+                    F_SIDE = side
+                    JSON_ENTRY = FUTURES_ENTRY
+                    error_occured_time = datetime.now()
+                    error_occured = e
+                    cursor.execute(
+                        "insert into futures_e_log(symbol, order_action, entry_order_type, occured_time, error_description) values (%s, %s, %s, %s, %s)",
+                        [FUTURES_SYMBOL, F_SIDE, JSON_ENTRY, error_occured_time, error_occured])
+                    conn.commit()
 
             if req_qty_type == "Percentage":
                 current_bal = futures_balance_in_selected_base_coin
@@ -2545,8 +2577,9 @@ if req_trade_type == "Futures":
                 qty_in_base_coin = req_qty
 
             FUTURES_QUANTITY = futures_calculate_buy_qty_with_precision(FUTURES_SYMBOL, qty_in_base_coin)
-
+            print(f"qty = {FUTURES_QUANTITY}")
             # Stop bot if balance is below user defined amount
+            print(f"stop bot bal = {req_stop_bot_balance}")
             if req_stop_bot_balance != 0:
                 if futures_balance_in_selected_base_coin < req_stop_bot_balance:
                     FUTURES_SYMBOL = FUTURES_SYMBOL
