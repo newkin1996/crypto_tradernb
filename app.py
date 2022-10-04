@@ -91,9 +91,6 @@ def welcome():
 @app.route('/profile',methods=["POST","GET"])
 def get_profile():
     if request.method == "GET":
-        cursor.execute("delete from futures_t_log")
-        conn.commit()
-        print("Records inserted")
 
         try:
             cursor.execute("select api_key from binance_keys")
@@ -542,10 +539,12 @@ def get_futures():
             return render_template('invalid_key.html')
 
     open_orders = client.futures_get_open_orders()
+    print(f"oo = {open_orders}")
     for oo in open_orders:
         if oo["symbol"] == "DOTUSDT":
             oo_order_id = oo["orderId"]
             cancel_futures_oo = client.futures_cancel_order(symbol="DOTUSDT", orderId=oo_order_id)
+            print(f"oo order cancelled = {cancel_futures_oo}")
 
         try:
 
