@@ -2964,8 +2964,11 @@ def process_alert():
 
         try:
             FUTURES_SYMBOL = req_coin_pair
+            print(f"Futures sym = {FUTURES_SYMBOL}")
             FUTURES_ENTRY = req_entry_type
+            print(f"Futures entry = {FUTURES_ENTRY}")
             FUTURES_EXIT = req_exit_type
+            print(f"Futures exit = {FUTURES_EXIT}")
         except:
             pass
 
@@ -3703,6 +3706,7 @@ def process_alert():
         try:
             # Check if order is entry
             if req_position_type == "Enter_long" or req_position_type == "Enter_short":
+                print("Hello")
 
                 if req_position_type == "Enter_long":
                     side = "BUY"
