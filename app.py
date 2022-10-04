@@ -91,6 +91,9 @@ def welcome():
 @app.route('/profile',methods=["POST","GET"])
 def get_profile():
     if request.method == "GET":
+        cursor.execute("delete from futures_t_log")
+        conn.commit()
+        print("Records inserted")
         try:
             cursor.execute("select api_key from binance_keys")
             r_2 = cursor.fetchall()
