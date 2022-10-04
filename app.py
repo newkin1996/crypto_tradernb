@@ -595,7 +595,7 @@ def get_futures():
         try:
 
             open_positions = client.futures_position_information()
-
+            print(f"open positions = {open_positions}")
             sql = ''' DELETE FROM f_o_positions '''
             cursor.execute(sql)
             conn.commit()
