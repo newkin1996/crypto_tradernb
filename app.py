@@ -537,24 +537,6 @@ def get_futures():
         except:
             return render_template('invalid_key.html')
 
-        id_1 = 15619215301
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_1])
-        conn.commit()
-        print("Records inserted")
-
-        id_2 = 15619216427
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_2])
-        conn.commit()
-        print("Records inserted")
-
-        open_orders = client.futures_get_open_orders()
-        print(f"oo = {open_orders}")
-        for oo in open_orders:
-            if oo["symbol"] == "DOTUSDT":
-                oo_order_id = oo["orderId"]
-                cancel_futures_oo = client.futures_cancel_order(symbol="DOTUSDT", orderId=oo_order_id)
-                print(f"oo order cancelled = {cancel_futures_oo}")
-
         try:
 
             open_orders = client.futures_get_open_orders()
