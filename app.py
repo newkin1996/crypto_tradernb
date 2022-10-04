@@ -768,6 +768,8 @@ def get_futures():
 
 @app.route('/webhook', methods=["POST"])
 def process_alert():
+    print(api_key)
+    print(api_secret)
     client = Client(api_key, api_secret)
     print("Webhook triggered")
     print(request)
