@@ -2828,13 +2828,45 @@ def process_alert():
                                             req_short_take_profit_percent, req_multi_tp, req_tp1_percent,
                                             req_tp2_percent, req_tp3_percent,
                                             req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size, req_order_time_out)
+                else:
+                    error_occured_time = datetime.now()
+                    error_occured = "Cant initiate the trade! Wallet balance is low!"
+                    cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                                   [error_occured_time, error_occured])
+                    conn.commit()
+            if req_stop_bot_balance == 0:
+                # Check order position
+                if req_position_type == "Enter_long":
+                    SPOT_BUY_QUANTITY = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                    proceed_enter_long(SPOT_BUY_QUANTITY, SPOT_SYMBOL, SPOT_ENTRY, req_long_stop_loss_percent,
+                                       req_long_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                       req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
+                                       req_order_time_out)
 
-            else:
-                error_occured_time = datetime.now()
-                error_occured = "Cant initiate the trade! Wallet balance is low!"
-                cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
-                               [error_occured_time, error_occured])
-                conn.commit()
+                elif req_position_type == "Exit_short":
+                    SPOT_BUY_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                    proceed_exit_short(req_position_type, SPOT_BUY_QUANTITY_EL, SPOT_SYMBOL,
+                                       req_short_stop_loss_percent,
+                                       req_short_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                       req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
+                                       req_order_time_out)
+
+                elif req_position_type == "Exit_long":
+                    SPOT_SELL_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                    proceed_exit_long(req_position_type, SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, req_long_stop_loss_percent,
+                                      req_long_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                      req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
+                                      req_order_time_out)
+
+                elif req_position_type == "Enter_short":
+                    SPOT_SELL_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                    proceed_enter_short(req_position_type, SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL,
+                                        req_short_stop_loss_percent,
+                                        req_short_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                        req_tp3_percent,
+                                        req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size, req_order_time_out)
+
+
     except Exception as e:
         print(e)
         error_occured_time = datetime.now()
@@ -3783,6 +3815,11 @@ def process_alert():
                                     req_short_stop_loss_percent,
                                     req_short_take_profit_percent, req_multi_tp, req_tp1_qty_size, req_tp2_qty_size,
                                     req_tp3_qty_size, req_tp1_percent, req_tp2_percent, req_tp3_percent)
+                if req_stop_bot_balance == 0:
+                    enter_order(FUTURES_ENTRY, FUTURES_SYMBOL, side, FUTURES_QUANTITY, req_order_time_out,
+                                req_long_stop_loss_percent, req_long_take_profit_percent, req_short_stop_loss_percent,
+                                req_short_take_profit_percent, req_multi_tp, req_tp1_qty_size, req_tp2_qty_size,
+                                req_tp3_qty_size, req_tp1_percent, req_tp2_percent, req_tp3_percent)
 
             # 7) check if order is exit
             elif req_position_type == "Exit_long" or req_position_type == "Exit_short":
@@ -3801,7 +3838,6 @@ def process_alert():
                 "insert into futures_e_log(occured_time, error_description) values (%s, %s)",
                 [error_occured_time, error_occured])
             conn.commit()
-
 
     success_message = "Success"
 

@@ -29,28 +29,28 @@ print("Connection established to: ",data)
 
 alert_response = {"exchange":"Binance",
  "base_coin":"USDT",
- "coin_pair": "DOTUSDT",
+ "coin_pair": "BTCUSDT",
  "entry_type":"Market",
  "exit_type":"Limit",
  "long_leverage": 2,
  "short_leverage": 2,
- "margin_mode":"Isolated",
+ "margin_mode":"Cross",
  "qty_type": "Fixed",
- "qty": 11,
+ "qty": 30,
  "trade_type": "Futures",
- "long_stop_loss_percent":0.05,
- "long_take_profit_percent":0,
- "short_stop_loss_percent":0,
- "short_take_profit_percent":0,
+ "long_stop_loss_percent":1.6,
+ "long_take_profit_percent":2.8,
+ "short_stop_loss_percent":1.6,
+ "short_take_profit_percent":2.8,
  "enable_multi_tp":"Yes",
- "tp_1_pos_size":50,
- "tp1_percent":0.025,
- "tp_2_pos_size":50,
- "tp2_percent":0.03,
- "tp_3_pos_size":0,
- "tp3_percent":0,
+ "tp_1_pos_size":33,
+ "tp1_percent":2,
+ "tp_2_pos_size":33,
+ "tp2_percent":3,
+ "tp_3_pos_size":30,
+ "tp3_percent":4,
  "stop_bot_below_balance":1,
- "order_time_out":120,
+ "order_time_out":36000,
  "position_type": "Enter_long"}
 
 try:
@@ -1663,12 +1663,43 @@ try:
                     proceed_enter_short(req_position_type, SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, req_short_stop_loss_percent,
                      req_short_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent, req_tp3_percent,
                      req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size, req_order_time_out)
+            else:
+                error_occured_time = datetime.now()
+                error_occured = "Cant initiate the trade! Wallet balance is low!"
+                cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                               [error_occured_time, error_occured])
+                conn.commit()
+        if req_stop_bot_balance == 0:
+            # Check order position
+            if req_position_type == "Enter_long":
+                SPOT_BUY_QUANTITY = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                proceed_enter_long(SPOT_BUY_QUANTITY, SPOT_SYMBOL, SPOT_ENTRY, req_long_stop_loss_percent,
+                                   req_long_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                   req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
+                                   req_order_time_out)
 
-        else:
-            error_occured_time = datetime.now()
-            error_occured = "Cant initiate the trade! Wallet balance is low!"
-            cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",[error_occured_time, error_occured])
-            conn.commit()
+            elif req_position_type == "Exit_short":
+                SPOT_BUY_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                proceed_exit_short(req_position_type, SPOT_BUY_QUANTITY_EL, SPOT_SYMBOL, req_short_stop_loss_percent,
+                                   req_short_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                   req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
+                                   req_order_time_out)
+
+            elif req_position_type == "Exit_long":
+                SPOT_SELL_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                proceed_exit_long(req_position_type, SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, req_long_stop_loss_percent,
+                                  req_long_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                  req_tp3_percent, req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size,
+                                  req_order_time_out)
+
+            elif req_position_type == "Enter_short":
+                SPOT_SELL_QUANTITY_EL = calculate_buy_qty_with_precision(SPOT_SYMBOL, qty_in_base_coin)
+                proceed_enter_short(req_position_type, SPOT_SELL_QUANTITY_EL, SPOT_SYMBOL, req_short_stop_loss_percent,
+                                    req_short_take_profit_percent, req_multi_tp, req_tp1_percent, req_tp2_percent,
+                                    req_tp3_percent,
+                                    req_tp1_qty_size, req_tp2_qty_size, req_tp3_qty_size, req_order_time_out)
+
+
 except Exception as e:
     print(e)
     error_occured_time = datetime.now()
@@ -2597,6 +2628,11 @@ if req_trade_type == "Futures":
                                 req_long_stop_loss_percent, req_long_take_profit_percent, req_short_stop_loss_percent,
                                 req_short_take_profit_percent, req_multi_tp, req_tp1_qty_size, req_tp2_qty_size,
                                 req_tp3_qty_size, req_tp1_percent, req_tp2_percent, req_tp3_percent)
+            if req_stop_bot_balance == 0:
+                enter_order(FUTURES_ENTRY, FUTURES_SYMBOL, side, FUTURES_QUANTITY, req_order_time_out,
+                            req_long_stop_loss_percent, req_long_take_profit_percent, req_short_stop_loss_percent,
+                            req_short_take_profit_percent, req_multi_tp, req_tp1_qty_size, req_tp2_qty_size,
+                            req_tp3_qty_size, req_tp1_percent, req_tp2_percent, req_tp3_percent)
 
         # 7) check if order is exit
         elif req_position_type == "Exit_long" or req_position_type == "Exit_short":
