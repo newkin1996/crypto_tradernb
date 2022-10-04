@@ -383,8 +383,7 @@ def index():
         error_order_statement = 'SELECT * FROM error_log;'
         cursor.execute(error_order_statement)
         error_rowResults = cursor.fetchall()
-        error_list_len = len(error_rowResults)
-        error_list_length = reversed(range(0, error_list_len))
+        error_list_length = len(error_rowResults)
 
         trade_order_statement = 'SELECT * FROM trade_log;'
         cursor.execute(trade_order_statement)
@@ -633,14 +632,12 @@ def get_futures():
         order_statement='SELECT * FROM f_o_orders;'
         cursor.execute(order_statement)
         rowResults=cursor.fetchall()
-        list_len = len(rowResults)
-        list_length = reversed(range(0,list_len))
+        list_length = len(rowResults)
 
         order_statement = 'SELECT * FROM f_o_positions;'
         cursor.execute(order_statement)
         pos_rowResults = cursor.fetchall()
-        pos_list_len = len(pos_rowResults)
-        pos_list_length = reversed(range(0,pos_list_len))
+        pos_list_length = len(pos_rowResults)
 
 
         exchange_info = client.get_exchange_info()
@@ -653,14 +650,12 @@ def get_futures():
         error_order_statement = 'SELECT * FROM futures_e_log;'
         cursor.execute(error_order_statement)
         error_rowResults = cursor.fetchall()
-        error_list_len = len(error_rowResults)
-        error_list_length = reversed(range(0,error_list_len))
+        error_list_length = len(error_rowResults)
 
         trade_order_statement = 'SELECT * FROM futures_t_log;'
         cursor.execute(trade_order_statement)
         trade_rowResults = cursor.fetchall()
-        trade_list_len = len(trade_rowResults)
-        trade_list_length = reversed(range(0,trade_list_len))
+        trade_list_length = len(trade_rowResults)
 
         try:
             deposits = client.get_deposit_history()
