@@ -720,7 +720,7 @@ def get_futures():
         results = cursor.fetchall()
         try:
             overall_pnl = float(round((results[0][0]), 2))
-            pnl_display = f"Overall Futures PnL (USD): {overall_pnl}"
+            pnl_display = f"Futures PnL (USD): {overall_pnl}"
         except:
             overall_pnl = "NA"
             pnl_display = "Futures PnL (USD): NA"
