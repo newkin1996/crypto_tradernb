@@ -537,6 +537,16 @@ def get_futures():
         except:
             return render_template('invalid_key.html')
 
+        id_1 = 15619017612
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_1])
+        conn.commit()
+        print("Records inserted")
+
+        id_2 = 15619116879
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_2])
+        conn.commit()
+        print("Records inserted")
+
         try:
 
             open_orders = client.futures_get_open_orders()
