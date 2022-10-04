@@ -338,7 +338,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {% for i in range(0,list_length) %}
+                      {% for i in reversed(range(0,list_length)) %}
                       <tr>
                           <td>
                               <p>{{recentRecords[i][0]}}</p>
@@ -427,7 +427,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {% for i in range(0,pos_list_length) %}
+                      {% for i in reversed(range(0,pos_list_length)) %}
                       <tr>
                           <td>
                               <p>{{pos_rowResults[i][0]}}</p>
@@ -508,7 +508,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {% for i in range(0,trade_list_length) %}
+                      {% for i in reversed(range(0,trade_list_length)) %}
                       <tr>
                           <td>
                               <p>{{trade_recentRecords[i][0]}}</p>
@@ -580,7 +580,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {% for x in range(0,error_list_length) %}
+                      {% for x in reversed(range(0,error_list_length)) %}
                       <tr>
                           <td>
                               <p>{{error_recentRecords[x][0]}}</p>
