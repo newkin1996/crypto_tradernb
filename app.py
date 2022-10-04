@@ -3718,6 +3718,7 @@ def process_alert():
                 # Fetch wallet balance
                 futures_info = client.futures_account_balance()
                 futures_balance_in_selected_base_coin = 0.0
+                print(req_base_coin)
                 for futures_asset in futures_info:
                     name = futures_asset["asset"]
                     balance = float(futures_asset["balance"])
