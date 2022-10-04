@@ -3552,8 +3552,11 @@ def process_alert():
 
                 if req_multi_tp == "Yes":
                     total_tp = req_tp1_percent + req_tp2_percent + req_tp3_percent
+                    print(f"TOTAL TP ============================= {total_tp}")
                     if total_tp == 1:
                         close_position = "Yes"
+                        print("Hellowwwwwwwwwwwwwwww")
+                        print(f"close position ================= {close_position}")
                     else:
                         close_position = "No"
                     tp_order_id = 0
