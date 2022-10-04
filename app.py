@@ -537,6 +537,21 @@ def get_futures():
         except:
             return render_template('invalid_key.html')
 
+        id_1 = 15616098963
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_1])
+        conn.commit()
+        print("Records inserted")
+
+        id_2 = 15616099834
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_2])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15616953269
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
         try:
 
             open_orders = client.futures_get_open_orders()
@@ -3102,6 +3117,12 @@ def process_alert():
                      FINAL_ORDER_TYPE, FINAL_ORDER_PRICE, FINAL_ORDER_QTY, total_pnl])
                 conn.commit()
 
+                open_orders = client.futures_get_open_orders()
+                for oo in open_orders:
+                    if oo["symbol"] == FUTURES_SYMBOL and oo["orderId"] == tp_order_id:
+                        oo_order_id = oo["orderId"]
+                        cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
+
             if executed_order_tp != "":
                 realized_pnl = float(executed_order_tp["realizedPnl"])
                 exit_order_commission = float(executed_order_tp["commission"])
@@ -3130,6 +3151,12 @@ def process_alert():
                     [final_order_executed_time, FINAL_ORDER_SYMBOL, FINAL_ORDER_ID, FINAL_ORDER_ACTION,
                      FINAL_ORDER_TYPE, FINAL_ORDER_PRICE, FINAL_ORDER_QTY, total_pnl])
                 conn.commit()
+
+                open_orders = client.futures_get_open_orders()
+                for oo in open_orders:
+                    if oo["symbol"] == FUTURES_SYMBOL and oo["orderId"] == stoploss_order_id:
+                        oo_order_id = oo["orderId"]
+                        cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
 
             if executed_order1 != "":
                 realized_pnl = float(executed_order1["realizedPnl"])
@@ -3160,6 +3187,13 @@ def process_alert():
                      FINAL_ORDER_TYPE, FINAL_ORDER_PRICE, FINAL_ORDER_QTY, total_pnl])
                 conn.commit()
 
+                if tp_order_id_2 == 0 and tp_order_id_3 == 0:
+                    open_orders = client.futures_get_open_orders()
+                    for oo in open_orders:
+                        if oo["symbol"] == FUTURES_SYMBOL and oo["orderId"] == stoploss_order_id:
+                            oo_order_id = oo["orderId"]
+                            cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
+
             if executed_order2 != "":
                 realized_pnl = float(executed_order2["realizedPnl"])
                 exit_order_commission = float(executed_order2["commission"])
@@ -3188,6 +3222,13 @@ def process_alert():
                     [final_order_executed_time, FINAL_ORDER_SYMBOL, FINAL_ORDER_ID, FINAL_ORDER_ACTION,
                      FINAL_ORDER_TYPE, FINAL_ORDER_PRICE, FINAL_ORDER_QTY, total_pnl])
                 conn.commit()
+
+                if tp_order_id_3 == 0:
+                    open_orders = client.futures_get_open_orders()
+                    for oo in open_orders:
+                        if oo["symbol"] == FUTURES_SYMBOL and oo["orderId"] == stoploss_order_id:
+                            oo_order_id = oo["orderId"]
+                            cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
 
             if executed_order3 != "":
                 realized_pnl = float(executed_order3["realizedPnl"])
@@ -3218,6 +3259,12 @@ def process_alert():
                      FINAL_ORDER_TYPE, FINAL_ORDER_PRICE, FINAL_ORDER_QTY, total_pnl])
                 conn.commit()
 
+                open_orders = client.futures_get_open_orders()
+                for oo in open_orders:
+                    if oo["symbol"] == FUTURES_SYMBOL and oo["orderId"] == stoploss_order_id:
+                        oo_order_id = oo["orderId"]
+                        cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
+
             if executed_order_liq != "":
                 realized_pnl = float(executed_order_liq["realizedPnl"])
                 exit_order_commission = float(executed_order_liq["commission"])
@@ -3246,6 +3293,13 @@ def process_alert():
                     [final_order_executed_time, FINAL_ORDER_SYMBOL, FINAL_ORDER_ID, FINAL_ORDER_ACTION,
                      FINAL_ORDER_TYPE, FINAL_ORDER_PRICE, FINAL_ORDER_QTY, total_pnl])
                 conn.commit()
+
+                open_orders = client.futures_get_open_orders()
+                for oo in open_orders:
+                    if oo["symbol"] == FUTURES_SYMBOL:
+                        oo_order_id = oo["orderId"]
+                        cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
+
 
         def check_exit_status(FUTURES_SYMBOL, stoploss_order_id, tp_order_id, tp_order_id_1, tp_order_id_2,
                               tp_order_id_3,
@@ -3549,8 +3603,7 @@ def process_alert():
                             if req_tp3_percent == 0 and close_position == "Yes":
                                 take_profit_order_2 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
                                                                                   type='TAKE_PROFIT_MARKET',
-                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_2,
-                                                                                  quantity=SELLABLE_2,closePosition="true")
+                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_2,closePosition="true")
                                 print(take_profit_order_2)
                                 tp_order_id_2 = take_profit_order_2["orderId"]
 
@@ -3599,8 +3652,7 @@ def process_alert():
                             if close_position == "Yes":
                                 take_profit_order_3 = client.futures_create_order(symbol=FUTURES_SYMBOL, side=exit_side,
                                                                                   type='TAKE_PROFIT_MARKET',
-                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_3,
-                                                                                  quantity=SELLABLE_3,closePosition="true")
+                                                                                  stopPrice=TAKE_PROFIT_PRICE_FINAL_3,closePosition="true")
                                 print(take_profit_order_3)
                                 tp_order_id_3 = take_profit_order_3["orderId"]
 
