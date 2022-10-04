@@ -768,9 +768,26 @@ def get_futures():
 
 @app.route('/webhook', methods=["POST"])
 def process_alert():
-    print(api_key)
-    print(api_secret)
-    client = Client(api_key, api_secret)
+    try:
+        cursor.execute("select api_key from binance_keys")
+        r_2 = cursor.fetchall()
+        api_key = r_2[0][0]
+    except:
+        api_key = ""
+
+    try:
+        cursor.execute("select api_secret from binance_keys")
+        r_2 = cursor.fetchall()
+        api_secret = r_2[0][0]
+    except:
+        api_secret = ""
+
+    if api_key and api_secret != "":
+        try:
+            client = Client(api_key, api_secret)
+        except:
+            print("Alert failed due to invalid keys")
+
     print("Webhook triggered")
     print(request)
     alert = request.get_data(as_text=True)
