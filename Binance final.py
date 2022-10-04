@@ -9,8 +9,8 @@ from datetime import datetime
 import time
 import threading
 
-api_key = "oH9O1uFYYkbm81rj2FPCbBEzaqUCWDs1vudZ4OoD94UYrTJsNQc1pUG9yR6baFjX"
-api_secret = "7tGyRDG97EjH6Zk0re04Ln9mjodknCifA9YbCOTEVCTBCXgkAuv9ZksNmXaXFiON"
+api_key = "10YhTCDGkxRzWbZE9l0Kw5rl6Cp53IOkIhm1rBVRkSGiVGaOI6WsdZya8TIt3P1r"
+api_secret = "bHLhbnZ68tULsmRoAnjgfUD79WjiICrcPgm4XzXOXcaZ6IID772Hpyy6Toc8mok9"
 
 client = Client(api_key, api_secret)
 
@@ -27,31 +27,7 @@ data = cursor.fetchone()
 print("Connection established to: ",data)
 
 
-alert_response = {"exchange":"Binance",
- "base_coin":"USDT",
- "coin_pair": "BTCUSDT",
- "entry_type":"Market",
- "exit_type":"Limit",
- "long_leverage": 2,
- "short_leverage": 2,
- "margin_mode":"Cross",
- "qty_type": "Fixed",
- "qty": 30,
- "trade_type": "Futures",
- "long_stop_loss_percent":1.6,
- "long_take_profit_percent":2.8,
- "short_stop_loss_percent":1.6,
- "short_take_profit_percent":2.8,
- "enable_multi_tp":"Yes",
- "tp_1_pos_size":33,
- "tp1_percent":2,
- "tp_2_pos_size":33,
- "tp2_percent":3,
- "tp_3_pos_size":30,
- "tp3_percent":4,
- "stop_bot_below_balance":1,
- "order_time_out":36000,
- "position_type": "Enter_long"}
+alert_response = {"exchange":"Binance","trade_type":"Futures","base_coin":"USDT","coin_pair":"DOTUSDT","entry_type":"Market","exit_type":"Market","margin_mode":"Isolated","qty_type":"Fixed","qty":"30","long_leverage":"3","short_leverage":"3","long_stop_loss_percent":"1","long_take_profit_percent":"1.2","short_stop_loss_percent":"1","short_take_profit_percent":"1.2","enable_multi_tp":"Yes","tp_1_pos_size":"33","tp_2_pos_size":"33","tp_3_pos_size":"34","tp1_percent":"1","tp2_percent":"1.1","tp3_percent":"1.2","stop_bot_below_balance":"0","order_time_out":"60","position_type":"Exit_long"}
 
 try:
     req_exchange = alert_response["exchange"]
@@ -245,6 +221,7 @@ try:
             qty_in_base_coin = current_bal * req_qty
         elif req_qty_type == "Fixed":
             qty_in_base_coin = req_qty
+
 
         def execute_limit_oco_order(SPOT_SIDE,req_position_type,BUY_ORDER_ID, SPOT_SYMBOL, SPOT_SELL_QUANTITY, TAKE_PROFIT_PRICE_FINAL,STOP_LOSS_PRICE_FINAL, SPOT_ENTRY,req_multi_tp,req_qty_size,req_order_time_out):
             SPOT_EXIT = "LIMIT"
@@ -1798,8 +1775,11 @@ if req_trade_type == "Futures":
 
     try:
         FUTURES_SYMBOL = req_coin_pair
+        print(f"Futures sym = {FUTURES_SYMBOL}")
         FUTURES_ENTRY = req_entry_type
+        print(f"Futures entry = {FUTURES_ENTRY}")
         FUTURES_EXIT = req_exit_type
+        print(f"Futures entry = {FUTURES_EXIT}")
     except:
         pass
 
@@ -2405,6 +2385,13 @@ if req_trade_type == "Futures":
                 the_pos = open_pos
                 break
 
+        open_orders = client.futures_get_open_orders()
+        for oo in open_orders:
+            if oo["symbol"] == FUTURES_SYMBOL:
+                oo_order_id = oo["orderId"]
+                cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
+
+
         if float(the_pos["positionAmt"]) < 0:
             existing_side = "SELL"
         else:
@@ -2478,7 +2465,7 @@ if req_trade_type == "Futures":
                         [FUTURES_SYMBOL, side, FUTURES_EXIT, exit_qty, error_occured_time, error_occured])
                     conn.commit()
 
-            time.sleep(req_order_time_out)
+            time.sleep(15)
 
             try:
                 live_trades_list = client.futures_account_trades(symbol=FUTURES_SYMBOL)

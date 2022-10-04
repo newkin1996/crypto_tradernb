@@ -3615,6 +3615,12 @@ def process_alert():
                     the_pos = open_pos
                     break
 
+            open_orders = client.futures_get_open_orders()
+            for oo in open_orders:
+                if oo["symbol"] == FUTURES_SYMBOL:
+                    oo_order_id = oo["orderId"]
+                    cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
+
             if float(the_pos["positionAmt"]) < 0:
                 existing_side = "SELL"
             else:
