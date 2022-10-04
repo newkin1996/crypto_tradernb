@@ -54,111 +54,112 @@ alert_response = {"exchange":"Binance",
  "position_type": "Exit_short"}
 
 try:
-    try:
-        req_exchange = alert_response["exchange"]
-    except Exception as e:
-        print(e)
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty exchange type"
-        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",[error_occured_time, error_occured])
-        conn.commit()
-
-    try:
-        req_base_coin = alert_response["base_coin"]
-    except Exception as e:
-        print(e)
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty base coin"
-        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
-                       [error_occured_time, error_occured])
-        conn.commit()
-
-    try:
-        req_coin_pair = alert_response["coin_pair"]
-    except Exception as e:
-        print(e)
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty coin pair"
-        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
-                       [error_occured_time, error_occured])
-        conn.commit()
-
-    req_entry_type = alert_response["entry_type"].upper()
-    req_exit_type = alert_response["exit_type"].upper()
-    req_margin_mode = alert_response["margin_mode"]
-    req_long_leverage = float(alert_response["long_leverage"])
-    req_short_leverage = float(alert_response["short_leverage"])
-
-    try:
-        req_qty_type = alert_response["qty_type"]
-    except Exception as e:
-        print(e)
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty qty type"
-        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
-                       [error_occured_time, error_occured])
-        conn.commit()
-
-    try:
-        req_qty = float(alert_response["qty"])
-    except Exception as e:
-        print(e)
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty qty"
-        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
-                       [error_occured_time, error_occured])
-        conn.commit()
-
-    try:
-        req_trade_type = alert_response["trade_type"]
-    except Exception as e:
-        print(e)
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty trade type"
-        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
-                       [error_occured_time, error_occured])
-        conn.commit()
-
-    req_long_leverage = alert_response["long_leverage"]
-    req_short_leverage = alert_response["short_leverage"]
-
-    req_long_stop_loss_percent = (float(alert_response["long_stop_loss_percent"]))/100
-    req_long_take_profit_percent = (float(alert_response["long_take_profit_percent"]))/100
-    req_short_stop_loss_percent = (float(alert_response["short_stop_loss_percent"]))/100
-    req_short_take_profit_percent = (float(alert_response["short_take_profit_percent"]))/100
-    print(f"req short tp = {req_short_take_profit_percent}")
-    req_multi_tp = alert_response["enable_multi_tp"]
-
-    req_tp1_qty_size = (float(alert_response["tp_1_pos_size"]))/100
-    req_tp2_qty_size = (float(alert_response["tp_2_pos_size"]))/100
-    req_tp3_qty_size = (float(alert_response["tp_3_pos_size"]))/100
-
-    req_tp1_percent = (float(alert_response["tp1_percent"]))/100
-    req_tp2_percent = (float(alert_response["tp2_percent"]))/100
-    req_tp3_percent = (float(alert_response["tp3_percent"]))/100
-
-    req_stop_bot_balance = float(alert_response["stop_bot_below_balance"])
-    req_order_time_out = float(alert_response["order_time_out"])
-
-    try:
-        req_position_type = alert_response["position_type"]
-    except Exception as e:
-        print(e)
-        error_occured_time = datetime.now()
-        error_occured = "Invalid/Empty position type"
-        cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
-                       [error_occured_time, error_occured])
-        conn.commit()
+    req_exchange = alert_response["exchange"]
 except Exception as e:
     print(e)
     error_occured_time = datetime.now()
-    error_occured = "Error in parsing json alert"
+    error_occured = "Invalid/Empty exchange type"
+    cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                   [error_occured_time, error_occured])
+    conn.commit()
+
+try:
+    req_trade_type = alert_response["trade_type"]
+except Exception as e:
+    print(e)
+    error_occured_time = datetime.now()
+    error_occured = "Invalid/Empty trade type"
     cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
                    [error_occured_time, error_occured])
     conn.commit()
 
 try:
     if req_trade_type == "Spot":
+
+        try:
+            try:
+                req_base_coin = alert_response["base_coin"]
+            except Exception as e:
+                print(e)
+                error_occured_time = datetime.now()
+                error_occured = "Invalid/Empty base coin"
+                cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                               [error_occured_time, error_occured])
+                conn.commit()
+
+            try:
+                req_coin_pair = alert_response["coin_pair"]
+            except Exception as e:
+                print(e)
+                error_occured_time = datetime.now()
+                error_occured = "Invalid/Empty coin pair"
+                cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                               [error_occured_time, error_occured])
+                conn.commit()
+
+            req_entry_type = alert_response["entry_type"].upper()
+            req_exit_type = alert_response["exit_type"].upper()
+            req_margin_mode = alert_response["margin_mode"]
+            req_long_leverage = float(alert_response["long_leverage"])
+            req_short_leverage = float(alert_response["short_leverage"])
+
+            try:
+                req_qty_type = alert_response["qty_type"]
+            except Exception as e:
+                print(e)
+                error_occured_time = datetime.now()
+                error_occured = "Invalid/Empty qty type"
+                cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                               [error_occured_time, error_occured])
+                conn.commit()
+
+            try:
+                req_qty = float(alert_response["qty"])
+            except Exception as e:
+                print(e)
+                error_occured_time = datetime.now()
+                error_occured = "Invalid/Empty qty"
+                cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                               [error_occured_time, error_occured])
+                conn.commit()
+
+            req_long_leverage = alert_response["long_leverage"]
+            req_short_leverage = alert_response["short_leverage"]
+
+            req_long_stop_loss_percent = (float(alert_response["long_stop_loss_percent"])) / 100
+            req_long_take_profit_percent = (float(alert_response["long_take_profit_percent"])) / 100
+            req_short_stop_loss_percent = (float(alert_response["short_stop_loss_percent"])) / 100
+            req_short_take_profit_percent = (float(alert_response["short_take_profit_percent"])) / 100
+            print(f"req short tp = {req_short_take_profit_percent}")
+            req_multi_tp = alert_response["enable_multi_tp"]
+
+            req_tp1_qty_size = (float(alert_response["tp_1_pos_size"])) / 100
+            req_tp2_qty_size = (float(alert_response["tp_2_pos_size"])) / 100
+            req_tp3_qty_size = (float(alert_response["tp_3_pos_size"])) / 100
+
+            req_tp1_percent = (float(alert_response["tp1_percent"])) / 100
+            req_tp2_percent = (float(alert_response["tp2_percent"])) / 100
+            req_tp3_percent = (float(alert_response["tp3_percent"])) / 100
+
+            req_stop_bot_balance = float(alert_response["stop_bot_below_balance"])
+            req_order_time_out = float(alert_response["order_time_out"])
+
+            try:
+                req_position_type = alert_response["position_type"]
+            except Exception as e:
+                print(e)
+                error_occured_time = datetime.now()
+                error_occured = "Invalid/Empty position type"
+                cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                               [error_occured_time, error_occured])
+                conn.commit()
+        except Exception as e:
+            print(e)
+            error_occured_time = datetime.now()
+            error_occured = "Error in parsing json alert"
+            cursor.execute("insert into error_log(occured_time, error_description) values (%s, %s)",
+                           [error_occured_time, error_occured])
+            conn.commit()
 
         SPOT_SYMBOL = req_coin_pair
         SPOT_ENTRY = req_entry_type
@@ -1679,6 +1680,91 @@ except Exception as e:
 
 
 if req_trade_type == "Futures":
+    try:
+        try:
+            req_base_coin = alert_response["base_coin"]
+        except Exception as e:
+            print(e)
+            error_occured_time = datetime.now()
+            error_occured = "Invalid/Empty base coin"
+            cursor.execute("insert into futures_e_log(occured_time, error_description) values (%s, %s)",
+                           [error_occured_time, error_occured])
+            conn.commit()
+
+        try:
+            req_coin_pair = alert_response["coin_pair"]
+        except Exception as e:
+            print(e)
+            error_occured_time = datetime.now()
+            error_occured = "Invalid/Empty coin pair"
+            cursor.execute("insert into futures_e_log(occured_time, error_description) values (%s, %s)",
+                           [error_occured_time, error_occured])
+            conn.commit()
+
+        req_entry_type = alert_response["entry_type"].upper()
+        req_exit_type = alert_response["exit_type"].upper()
+        req_margin_mode = alert_response["margin_mode"]
+        req_long_leverage = float(alert_response["long_leverage"])
+        req_short_leverage = float(alert_response["short_leverage"])
+
+        try:
+            req_qty_type = alert_response["qty_type"]
+        except Exception as e:
+            print(e)
+            error_occured_time = datetime.now()
+            error_occured = "Invalid/Empty qty type"
+            cursor.execute("insert into futures_e_log(occured_time, error_description) values (%s, %s)",
+                           [error_occured_time, error_occured])
+            conn.commit()
+
+        try:
+            req_qty = float(alert_response["qty"])
+        except Exception as e:
+            print(e)
+            error_occured_time = datetime.now()
+            error_occured = "Invalid/Empty qty"
+            cursor.execute("insert into futures_e_log(occured_time, error_description) values (%s, %s)",
+                           [error_occured_time, error_occured])
+            conn.commit()
+
+        req_long_leverage = alert_response["long_leverage"]
+        req_short_leverage = alert_response["short_leverage"]
+
+        req_long_stop_loss_percent = (float(alert_response["long_stop_loss_percent"])) / 100
+        req_long_take_profit_percent = (float(alert_response["long_take_profit_percent"])) / 100
+        req_short_stop_loss_percent = (float(alert_response["short_stop_loss_percent"])) / 100
+        req_short_take_profit_percent = (float(alert_response["short_take_profit_percent"])) / 100
+        print(f"req short tp = {req_short_take_profit_percent}")
+        req_multi_tp = alert_response["enable_multi_tp"]
+
+        req_tp1_qty_size = (float(alert_response["tp_1_pos_size"])) / 100
+        req_tp2_qty_size = (float(alert_response["tp_2_pos_size"])) / 100
+        req_tp3_qty_size = (float(alert_response["tp_3_pos_size"])) / 100
+
+        req_tp1_percent = (float(alert_response["tp1_percent"])) / 100
+        req_tp2_percent = (float(alert_response["tp2_percent"])) / 100
+        req_tp3_percent = (float(alert_response["tp3_percent"])) / 100
+
+        req_stop_bot_balance = float(alert_response["stop_bot_below_balance"])
+        req_order_time_out = float(alert_response["order_time_out"])
+
+        try:
+            req_position_type = alert_response["position_type"]
+        except Exception as e:
+            print(e)
+            error_occured_time = datetime.now()
+            error_occured = "Invalid/Empty position type"
+            cursor.execute("insert into futures_e_log(occured_time, error_description) values (%s, %s)",
+                           [error_occured_time, error_occured])
+            conn.commit()
+    except Exception as e:
+        print(e)
+        error_occured_time = datetime.now()
+        error_occured = "Error in parsing json alert"
+        cursor.execute("insert into futures_e_log(occured_time, error_description) values (%s, %s)",
+                       [error_occured_time, error_occured])
+        conn.commit()
+
     try:
         FUTURES_SYMBOL = req_coin_pair
         FUTURES_ENTRY = req_entry_type
