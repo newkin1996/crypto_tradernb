@@ -588,11 +588,9 @@ def get_futures():
                     p_o_l = ((sym_current_price - ENTRY_PRICE_OF_INITIAL_ORDER) / ENTRY_PRICE_OF_INITIAL_ORDER) * 100
                     PROFIT_OR_LOSS_FROM_ENTRY = str((round(p_o_l, 3))) + "%"
 
-                    print(PROFIT_OR_LOSS_FROM_ENTRY)
 
                     cursor.execute("insert into f_o_orders(created_date, symbol, order_id, price, quantity, order_action, order_type, entry_price, current_price, pnl, pnl_per) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",[create_date, sym, id, price, QTY_OF_OPEN_ORDER, action,type, ENTRY_PRICE_OF_INITIAL_ORDER, sym_current_price, p_n_l, PROFIT_OR_LOSS_FROM_ENTRY])
                     conn.commit()
-                    print("OO DONE!!!!!!!!!!!!!!")
                 except:
                     cursor.execute(
                         "insert into f_o_orders(created_date, symbol, order_id, price, order_action, order_type, current_price) values (%s, %s, %s, %s, %s, %s, %s)",
@@ -624,11 +622,9 @@ def get_futures():
 
                 if float(order["positionAmt"]) < 0:
                     pos_qty = (float(order["positionAmt"]))*-1
-                    print(f"pos qty = {pos_qty}")
                     pos_side = "SELL"
                 else:
                     pos_qty = float(order["positionAmt"])
-                    print(f"pos qty = {pos_qty}")
                     pos_side = "BUY"
 
                 PROFIT_OR_LOSS_FROM_ENTRY = round((float(order["unRealizedProfit"])),6)
