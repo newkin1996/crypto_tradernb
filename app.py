@@ -653,7 +653,8 @@ def get_futures():
         error_order_statement = 'SELECT * FROM futures_e_log;'
         cursor.execute(error_order_statement)
         error_rowResults = cursor.fetchall()
-        error_list_length = len(error_rowResults)
+        error_list_len = len(error_rowResults)
+        error_list_length = reversed(range(0,error_list_len))
 
         trade_order_statement = 'SELECT * FROM futures_t_log;'
         cursor.execute(trade_order_statement)
