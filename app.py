@@ -595,7 +595,7 @@ def get_futures():
         try:
 
             open_positions = client.futures_position_information()
-            print(f"open positions = {open_positions}")
+
             sql = ''' DELETE FROM f_o_positions '''
             cursor.execute(sql)
             conn.commit()
@@ -614,15 +614,17 @@ def get_futures():
 
                 if float(order["positionAmt"]) < 0:
                     pos_qty = (float(order["positionAmt"]))*-1
+                    print(f"pos qty = {pos_qty}")
                     pos_side = "SELL"
                 else:
                     pos_qty = float(order["positionAmt"])
+                    print(f"pos qty = {pos_qty}")
                     pos_side = "BUY"
 
                 PROFIT_OR_LOSS_FROM_ENTRY = round((float(order["unRealizedProfit"])),6)
 
                 amt = round(float(order["positionAmt"]))
-                if amt != 0:
+                if float(order["positionAmt"]) != 0:
                     cursor.execute(
                         "insert into f_o_positions(created_date, symbol, side, entry_price, current_price, liq_price, margin_type, leverage, quantity, pnl) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                         [create_date, sym, pos_side, pos_entry_price, pos_current_price, liquidation_price, margin_type, leverage, pos_qty,PROFIT_OR_LOSS_FROM_ENTRY])
