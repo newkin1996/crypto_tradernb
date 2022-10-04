@@ -626,7 +626,8 @@ def get_futures():
                         "insert into f_o_positions(created_date, symbol, side, entry_price, current_price, liq_price, margin_type, leverage, quantity, pnl) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                         [create_date, sym, pos_side, pos_entry_price, pos_current_price, liquidation_price, margin_type, leverage, pos_qty,PROFIT_OR_LOSS_FROM_ENTRY])
                     conn.commit()
-        except:
+        except Exception as e:
+            print(f"open position error = {e}")
             pass
 
         order_statement='SELECT * FROM f_o_orders;'
