@@ -91,6 +91,9 @@ def welcome():
 @app.route('/profile',methods=["POST","GET"])
 def get_profile():
     if request.method == "GET":
+        cursor.execute("delete from futures_t_log")
+        conn.commit()
+        print("Records inserted")
         try:
             cursor.execute("select api_key from binance_keys")
             r_2 = cursor.fetchall()
@@ -3692,7 +3695,7 @@ def process_alert():
                             [FUTURES_SYMBOL, side, FUTURES_EXIT, exit_qty, error_occured_time, error_occured])
                         conn.commit()
 
-                time.sleep(15)
+                time.sleep(req_order_time_out)
 
                 try:
                     live_trades_list = client.futures_account_trades(symbol=FUTURES_SYMBOL)
