@@ -582,6 +582,7 @@ def get_futures():
 
                     cursor.execute("insert into f_o_orders(created_date, symbol, order_id, price, quantity, order_action, order_type, entry_price, current_price, pnl, pnl_per) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",[create_date, sym, id, price, QTY_OF_OPEN_ORDER, action,type, ENTRY_PRICE_OF_INITIAL_ORDER, sym_current_price, p_n_l, PROFIT_OR_LOSS_FROM_ENTRY])
                     conn.commit()
+                    print("OO DONE!!!!!!!!!!!!!!")
                 except:
                     cursor.execute(
                         "insert into f_o_orders(created_date, symbol, order_id, price, order_action, order_type, current_price) values (%s, %s, %s, %s, %s, %s, %s)",
