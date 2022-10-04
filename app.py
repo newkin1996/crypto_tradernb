@@ -3604,6 +3604,7 @@ def process_alert():
                 t11.start()
 
         def exit_order(side, FUTURES_SYMBOL, FUTURES_EXIT, req_order_time_out):
+            print("1")
             the_pos = ""
             all_positions = client.futures_position_information()
             for open_pos in all_positions:
@@ -3617,7 +3618,7 @@ def process_alert():
                 if oo["symbol"] == FUTURES_SYMBOL:
                     oo_order_id = oo["orderId"]
                     cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
-
+            print("2")
             if float(the_pos["positionAmt"]) < 0:
                 existing_side = "SELL"
             else:
