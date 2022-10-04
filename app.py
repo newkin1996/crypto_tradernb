@@ -3855,6 +3855,7 @@ def process_alert():
 
             # 7) check if order is exit
             elif req_position_type == "Exit_long" or req_position_type == "Exit_short":
+                print("TRYING TO EXIT.....................")
 
                 if req_position_type == "Exit_long":
                     side = "SELL"
