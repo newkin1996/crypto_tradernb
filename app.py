@@ -537,20 +537,6 @@ def get_futures():
         except:
             return render_template('invalid_key.html')
 
-        id_1 = 15616098963
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_1])
-        conn.commit()
-        print("Records inserted")
-
-        id_2 = 15616099834
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_2])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15616953269
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
 
         try:
 
