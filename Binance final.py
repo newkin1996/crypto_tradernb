@@ -27,7 +27,7 @@ data = cursor.fetchone()
 print("Connection established to: ",data)
 
 
-alert_response = {"exchange":"Binance","trade_type":"Futures","base_coin":"USDT","coin_pair":"DOTUSDT","entry_type":"Market","exit_type":"Market","margin_mode":"Isolated","qty_type":"Fixed","qty":"30","long_leverage":"3","short_leverage":"3","long_stop_loss_percent":"1","long_take_profit_percent":"1.2","short_stop_loss_percent":"1","short_take_profit_percent":"1.2","enable_multi_tp":"Yes","tp_1_pos_size":"33","tp_2_pos_size":"33","tp_3_pos_size":"34","tp1_percent":"1","tp2_percent":"1.1","tp3_percent":"1.2","stop_bot_below_balance":"0","order_time_out":"60","position_type":"Exit_long"}
+alert_response = {"exchange":"Binance","trade_type":"Futures","base_coin":"USDT","coin_pair":"DOTUSDT","entry_type":"Market","exit_type":"Market","margin_mode":"Isolated","qty_type":"Fixed","qty":"30","long_leverage":"3","short_leverage":"3","long_stop_loss_percent":"0.3","long_take_profit_percent":"0.2","short_stop_loss_percent":"0.3","short_take_profit_percent":"0.2","enable_multi_tp":"Yes","tp_1_pos_size":"33","tp_2_pos_size":"33","tp_3_pos_size":"34","tp1_percent":"0.2","tp2_percent":"0.25","tp3_percent":"0.3","stop_bot_below_balance":"0","order_time_out":"60","position_type":"Exit_long"}
 
 try:
     req_exchange = alert_response["exchange"]
@@ -1826,8 +1826,8 @@ if req_trade_type == "Futures":
         the_pos = ""
         all_positions = client.futures_position_information()
         for open_pos in all_positions:
-            amt = round(float(open_pos["positionAmt"]))
-            if (open_pos["symbol"] == FUTURES_SYMBOL and amt != 0):
+            amt = float(open_pos["positionAmt"])
+            if (open_pos["symbol"] == FUTURES_SYMBOL and (amt > 0 or amt < 0)):
                 the_pos = open_pos
                 break
         return the_pos
@@ -2380,10 +2380,11 @@ if req_trade_type == "Futures":
         the_pos = ""
         all_positions = client.futures_position_information()
         for open_pos in all_positions:
-            amt = round(float(open_pos["positionAmt"]))
-            if (open_pos["symbol"] == FUTURES_SYMBOL and amt != 0):
+            amt = float(open_pos["positionAmt"])
+            if (open_pos["symbol"] == FUTURES_SYMBOL and (amt > 0 or amt < 0)):
                 the_pos = open_pos
                 break
+        print(the_pos)
 
         open_orders = client.futures_get_open_orders()
         for oo in open_orders:
@@ -2391,12 +2392,14 @@ if req_trade_type == "Futures":
                 oo_order_id = oo["orderId"]
                 cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
 
-
-        if float(the_pos["positionAmt"]) < 0:
-            existing_side = "SELL"
-        else:
-            existing_side = "BUY"
-        print(existing_side)
+        try:
+            if float(the_pos["positionAmt"]) < 0:
+                existing_side = "SELL"
+            else:
+                existing_side = "BUY"
+            print(existing_side)
+        except Exception as e:
+            print(e)
 
         if side == "BUY" and existing_side == "SELL":
             valid_order = "Yes"

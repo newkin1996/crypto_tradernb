@@ -620,7 +620,6 @@ def get_futures():
 
                 PROFIT_OR_LOSS_FROM_ENTRY = round((float(order["unRealizedProfit"])),6)
 
-                amt = round(float(order["positionAmt"]))
                 if float(order["positionAmt"]) != 0:
                     cursor.execute(
                         "insert into f_o_positions(created_date, symbol, side, entry_price, current_price, liq_price, margin_type, leverage, quantity, pnl) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
@@ -3037,8 +3036,8 @@ def process_alert():
             the_pos = ""
             all_positions = client.futures_position_information()
             for open_pos in all_positions:
-                amt = round(float(open_pos["positionAmt"]))
-                if (open_pos["symbol"] == FUTURES_SYMBOL and amt != 0):
+                amt = float(open_pos["positionAmt"])
+                if (open_pos["symbol"] == FUTURES_SYMBOL and (amt > 0 or amt < 0)):
                     the_pos = open_pos
                     break
             return the_pos
@@ -3604,12 +3603,11 @@ def process_alert():
                 t11.start()
 
         def exit_order(side, FUTURES_SYMBOL, FUTURES_EXIT, req_order_time_out):
-            print("1")
             the_pos = ""
             all_positions = client.futures_position_information()
             for open_pos in all_positions:
-                amt = round(float(open_pos["positionAmt"]))
-                if (open_pos["symbol"] == FUTURES_SYMBOL and amt != 0):
+                amt = float(open_pos["positionAmt"])
+                if (open_pos["symbol"] == FUTURES_SYMBOL and (amt > 0 or amt < 0)):
                     the_pos = open_pos
                     break
 
@@ -3618,7 +3616,7 @@ def process_alert():
                 if oo["symbol"] == FUTURES_SYMBOL:
                     oo_order_id = oo["orderId"]
                     cancel_futures_oo = client.futures_cancel_order(symbol=FUTURES_SYMBOL, orderId=oo_order_id)
-            print("2")
+
             if float(the_pos["positionAmt"]) < 0:
                 existing_side = "SELL"
             else:
@@ -3646,7 +3644,6 @@ def process_alert():
                     [FUTURES_SYMBOL, side, FUTURES_EXIT, error_occured_time, error_occured])
                 conn.commit()
             else:
-                print("Finally...........")
                 if side == "BUY":
                     exit_qty = (float(the_pos["positionAmt"])) * -1
                 if side == "SELL":
