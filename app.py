@@ -3551,7 +3551,7 @@ def process_alert():
                         tp_order_id = 0
 
                 if req_multi_tp == "Yes":
-                    total_tp = req_tp1_percent + req_tp2_percent + req_tp3_percent
+                    total_tp = req_tp1_qty_size + req_tp2_qty_size + req_tp3_qty_size
                     print(f"TOTAL TP ============================= {total_tp}")
                     if total_tp == 1:
                         close_position = "Yes"
