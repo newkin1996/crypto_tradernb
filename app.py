@@ -537,52 +537,6 @@ def get_futures():
         except:
             return render_template('invalid_key.html')
 
-        id_1 = 15615816523
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_1])
-        conn.commit()
-        print("Records inserted")
-
-        id_2 = 15615817304
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_2])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15618693822
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15615817321
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15615817345
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15618894828
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15618895575
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15618895607
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
-
-        id_3 = 15618895632
-        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
-        conn.commit()
-        print("Records inserted")
-
-
         try:
 
             open_orders = client.futures_get_open_orders()
