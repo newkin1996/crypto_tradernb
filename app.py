@@ -3689,7 +3689,7 @@ def process_alert():
                             [FUTURES_SYMBOL, side, FUTURES_EXIT, exit_qty, error_occured_time, error_occured])
                         conn.commit()
 
-                time.sleep(req_order_time_out)
+                time.sleep(15)
 
                 try:
                     live_trades_list = client.futures_account_trades(symbol=FUTURES_SYMBOL)
