@@ -537,6 +537,96 @@ def get_futures():
         except:
             return render_template('invalid_key.html')
 
+        id_1 = 15618653952
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_1])
+        conn.commit()
+        print("Records inserted")
+
+        id_2 = 15618673368
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_2])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618693822
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618737359
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618756848
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618738302
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618738318
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618738342
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618695037
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618695088
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618695133
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618759608
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618801832
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618818477
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618829951
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618831248
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618831272
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
+        id_3 = 15618831289
+        cursor.execute("delete from futures_t_log where order_id = %s", [id_3])
+        conn.commit()
+        print("Records inserted")
+
 
         try:
 
@@ -3552,11 +3642,8 @@ def process_alert():
 
                 if req_multi_tp == "Yes":
                     total_tp = req_tp1_qty_size + req_tp2_qty_size + req_tp3_qty_size
-                    print(f"TOTAL TP ============================== {total_tp}")
                     if total_tp == 1:
                         close_position = "Yes"
-                        print("Hellowwwwwwwwwwwwwwww")
-                        print(f"close position ================= {close_position}")
                     else:
                         close_position = "No"
                     tp_order_id = 0
