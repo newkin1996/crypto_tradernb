@@ -3623,7 +3623,7 @@ def process_alert():
                 existing_side = "SELL"
             else:
                 existing_side = "BUY"
-            print(existing_side)
+            print(f"existing side = {existing_side}")
 
             if side == "BUY" and existing_side == "SELL":
                 valid_order = "Yes"
@@ -3646,6 +3646,7 @@ def process_alert():
                     [FUTURES_SYMBOL, side, FUTURES_EXIT, error_occured_time, error_occured])
                 conn.commit()
             else:
+                print("Finally...........")
                 if side == "BUY":
                     exit_qty = (float(the_pos["positionAmt"])) * -1
                 if side == "SELL":
