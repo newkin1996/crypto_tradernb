@@ -3512,7 +3512,7 @@ def process_alert():
 
                 if req_multi_tp == "Yes":
                     total_tp = req_tp1_percent + req_tp2_percent + req_tp3_percent
-                    if total_tp == 100:
+                    if total_tp == 1:
                         close_position = "Yes"
                     else:
                         close_position = "No"
